@@ -27,7 +27,7 @@
 |------|------|
 | 跨平台 | 按平台拆成 `macos/`、`windows/`，提供对应安装与运行入口 |
 | 安全模型 | 通过本机回环 CDP 注入，不改官方应用包、签名或模型供应商配置 |
-| 本地美化 | Mac 本机引擎装在 `~/.codex/codex-dream-skin-studio`；支持主题、背景与阅读区配置 |
+| 本地美化 | Mac 提供原生菜单栏应用与 DMG；引擎装在 `~/.codex/codex-dream-skin-studio`，支持主题、背景与阅读区配置 |
 | 图库 | `docs/images/gallery/skin-01`～`08`；粉系定制 → 财神打工 → 红白科幻… |
 | i18n | 默认中文 `README.md`，英文 `README.en.md`，顶部互链 |
 
@@ -38,7 +38,7 @@
 ## 3. 架构（两边相同）
 
 ```text
-用户本机主题工具（本仓库脚本 / 已安装引擎）
+用户本机主题工具（原生菜单栏应用 / 本仓库脚本 / 已安装引擎）
     │  启动官方 Codex + 本机 CDP（127.0.0.1）
     ▼
 官方 Codex Desktop（不改 asar / 签名）
@@ -63,7 +63,7 @@ Codex-Dream-Skin/
 │   ├── promo-copy.md      # 宣传文案（朋友圈等，注意肖像/IP）
 │   └── images/
 │       └── gallery/       # README 效果图 skin-01…08
-├── macos/                 # Mac 脚本、资源、LICENSE、SKILL
+├── macos/                 # Mac 菜单栏应用、DMG 构建、脚本、资源、LICENSE、SKILL
 └── windows/               # Windows PowerShell / 注入脚本
 ```
 
@@ -71,6 +71,7 @@ Codex-Dream-Skin/
 
 | 用途 | 路径 |
 |------|------|
+| 菜单栏应用 | `/Applications/Codex Dream Skin.app` |
 | 引擎 | `~/.codex/codex-dream-skin-studio` |
 | 状态 / 主题 | `~/Library/Application Support/CodexDreamSkinStudio` |
 | 桌面启动器 | `~/Desktop/Codex Dream Skin*.command` → 指向上面的引擎脚本 |
@@ -108,7 +109,8 @@ Windows 状态目录见 `platforms.md`（`%LOCALAPPDATA%\CodexDreamSkin`）。
 | 动作 | 说明 |
 |------|------|
 | 换图库图 | 替换 `docs/images/gallery/skin-XX.jpg`，同步改 README 两份 caption |
-| 发版推送 | 在本仓库目录 `git add` → `commit` → `push origin main` |
+| 本地构建 DMG | `./macos/scripts/build-dmg.sh --unsigned` |
+| 正式发版 | 更新 `macos/VERSION` / `CHANGELOG.md`，推送匹配的 `vX.Y.Z` 标签触发签名、公证与 GitHub Release |
 | Mac 本机主题 | 改 `~/.codex/codex-dream-skin-studio` 的 CSS/inject；与 GitHub 源码可不同步，属本机实验位 |
 
 ---

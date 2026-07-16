@@ -2,8 +2,26 @@
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
-NODE="${NODE:-/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node}"
-[ -x "$NODE" ] || { printf 'Codex bundled Node.js was not found: %s\n' "$NODE" >&2; exit 1; }
+CODEX_NODE="/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+CODEX_RUNTIME_AVAILABLE="false"
+if [ -x "$CODEX_NODE" ]; then CODEX_RUNTIME_AVAILABLE="true"; fi
+if [ -z "${NODE:-}" ]; then
+  if [ "$CODEX_RUNTIME_AVAILABLE" = "true" ]; then
+    NODE="$CODEX_NODE"
+  else
+    NODE="$(command -v node || true)"
+  fi
+fi
+[ -x "$NODE" ] || { printf 'Node.js 20 or newer is required for static tests.\n' >&2; exit 1; }
+NODE_MAJOR="$($NODE -p 'Number(process.versions.node.split(".")[0])')"
+[ "$NODE_MAJOR" -ge 20 ] || { printf 'Node.js 20 or newer is required; found %s.\n' "$($NODE --version)" >&2; exit 1; }
+VERSION="$(/usr/bin/tr -d '[:space:]' < "$ROOT/VERSION")"
+[ -n "$VERSION" ] || { printf 'VERSION is empty.\n' >&2; exit 1; }
+PACKAGE_VERSION="$($NODE -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).version)' "$ROOT/package.json")"
+[ "$PACKAGE_VERSION" = "$VERSION" ] || {
+  printf 'package.json version %s does not match VERSION %s.\n' "$PACKAGE_VERSION" "$VERSION" >&2
+  exit 1
+}
 
 while IFS= read -r file; do /bin/bash -n "$file"; done < <(
   /usr/bin/find "$ROOT" -type f \( -name '*.sh' -o -name '*.command' \) \
@@ -110,7 +128,20 @@ BACKUP="$TMP/theme-backup.json"
 "$NODE" "$ROOT/scripts/theme-config.mjs" restore "$CONFIG" "$BACKUP" >/dev/null
 /usr/bin/cmp -s "$CONFIG" "$TMP/original.toml"
 
-/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "1.4.0" ]' _ "$ROOT"
-"$ROOT/scripts/doctor-macos.sh" >/dev/null
+/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "$2" ]' _ "$ROOT" "$VERSION"
+STATE_VERSION=""
+STATE_PATH="$HOME/Library/Application Support/CodexDreamSkinStudio/state.json"
+if [ -f "$STATE_PATH" ]; then
+  STATE_VERSION="$($NODE -e '
+    try { process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).skinVersion || "") } catch {}
+  ' "$STATE_PATH")"
+fi
+if [ "$CODEX_RUNTIME_AVAILABLE" = "true" ] && [ -f "$HOME/.codex/config.toml" ] && \
+   { [ -z "$STATE_VERSION" ] || [ "$STATE_VERSION" = "$VERSION" ]; }; then
+  "$ROOT/scripts/doctor-macos.sh" >/dev/null
+  DOCTOR_RESULT="doctor"
+else
+  DOCTOR_RESULT="doctor skipped (runtime/config unavailable or live session uses another version)"
+fi
 
-printf 'PASS: syntax, payload, reading/header preferences, palette/background independence, config round-trip, HOME recovery, signature, and doctor checks.\n'
+printf 'PASS: syntax, payload, reading/header preferences, palette/background independence, config round-trip, HOME recovery, and %s checks.\n' "$DOCTOR_RESULT"

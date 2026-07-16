@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.5.0 — 2026-07-16
+
+### 新增
+
+- 新增原生 macOS 菜单栏应用，安装后无需 SwiftBar 即可应用、暂停、换图、切换配色和恢复官方外观
+- 新增通用架构 DMG 构建，单个安装包同时支持 Apple Silicon 与 Intel Mac
+- 菜单栏可通过 macOS 系统登录项设置启用「登录时启动」
+- 新增 GitHub Actions 标签发布流程，可自动完成 Developer ID 签名、公证和 GitHub Release 上传
+
+### 改进
+
+- 首次打开应用会把内置引擎原子同步到原有安装路径，升级时保留用户图片、主题、偏好和日志
+- 本地开发者可用一条命令构建 ad-hoc DMG；原有 Shell、`.command` 和 SwiftBar 入口继续保留用于兼容
+- 运行时版本统一从 `VERSION` 读取，减少发版时不同文件版本不一致的风险
+
+### 说明
+
+- 原生菜单栏应用要求 macOS 13 或更新版本；DMG 拖入「应用程序」后仍需由用户首次打开一次
+- 公开分发建议使用 Developer ID、Hardened Runtime 和 Apple 公证；未签名本地构建会触发 Gatekeeper 提示
+- 主题仍只通过 `127.0.0.1` 回环 CDP 应用，不修改官方 `.app`、`app.asar` 或代码签名，也不会静默改写 API 配置
+
+---
+
 ## 1.4.0 — 2026-07-16
 
 ### 新增

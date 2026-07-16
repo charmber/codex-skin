@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const SKIN_VERSION = "1.4.0";
+const SKIN_VERSION = (await fs.readFile(path.join(root, "VERSION"), "utf8")).trim();
+if (!SKIN_VERSION) throw new Error("VERSION is empty");
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const MAX_ART_BYTES = 16 * 1024 * 1024;
 

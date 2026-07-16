@@ -10,10 +10,10 @@ This file is an optional Codex capability entry. The delivery is a complete stan
 
 ## Workflow
 
-1. Run `Install Codex Dream Skin.command` from the complete project folder.
-2. Run `Customize Codex Dream Skin.command`, choose an image in Finder, and enter a theme name.
+1. On macOS 13 or newer, install `Codex Dream Skin.app` from the DMG, open it once, and choose `初始化主题引擎` from the menu bar. The `.command` installer remains a compatibility fallback.
+2. Choose `换一张图` from the menu bar, select an image in Finder, and enter a theme name.
 3. Verify the live result with `Verify Codex Dream Skin.command`. A pass requires a visible native sidebar and composer, no horizontal overflow, non-interactive decoration, and—on the home route—a real banner, native cards, and project selector.
-4. Restore the official appearance with `Restore Codex Dream Skin.command`.
+4. Restore the official appearance from the menu bar or with `Restore Codex Dream Skin.command`.
 
 ## Guardrails
 

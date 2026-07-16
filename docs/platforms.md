@@ -19,6 +19,7 @@
 | 用途 | 路径 |
 |------|------|
 | 源码（本整理包） | `Codex-Dream-Skin/macos/` |
+| 原生菜单栏应用 | `/Applications/Codex Dream Skin.app` |
 | 安装后引擎 | `~/.codex/codex-dream-skin-studio` |
 | 状态 / 日志 | `~/Library/Application Support/CodexDreamSkinStudio` |
 | Codex 配置 | `~/.codex/config.toml`（仅外观相关项可能被改，可恢复） |
@@ -36,6 +37,7 @@
 
 | 功能 | macOS | Windows |
 |------|:-----:|:-------:|
+| 原生菜单栏应用 / DMG | ✅ macOS 13+ | ❌ |
 | 安装脚本 | ✅ | ✅ |
 | 启动 + 注入 | ✅ | ✅ |
 | 一键恢复 | ✅ | ✅ |
@@ -44,6 +46,7 @@
 | 官方签名校验 | ✅ | 部分（Store 包发现） |
 | 客户部署提示词 | ✅ | ❌（可用 Mac 文案改写） |
 | 打客户 ZIP | ✅ `build-client-release.sh` | 手动压缩 `windows/` |
+| 自动发布安装包 | ✅ 标签触发 GitHub Actions | ❌ |
 
 ## 不要放进这个目录的东西
 

@@ -23,17 +23,17 @@
 
 <p align="center">
   <img src="docs/images/gallery/skin-01.jpg" alt="暗黑系列" width="900"><br>
-  <sub>粉系定制</sub>
+  <sub>暗黑系列</sub>
 </p>
 
 <p align="center">
   <img src="docs/images/gallery/skin-02.jpg" alt="樱花舞台" width="900"><br>
-  <sub>财神打工版</sub>
+  <sub>樱花舞台</sub>
 </p>
 
 <p align="center">
   <img src="docs/images/gallery/skin-03.jpg" alt="未来青" width="900"><br>
-  <sub>红白科幻</sub>
+  <sub>未来青</sub>
 </p>
 
 ## 它能做什么
@@ -47,11 +47,19 @@
 
 ## 快速开始
 
-仓库内按平台放了现成脚本（实现细节不同，效果都是「主题化 Codex」）：
+macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。
+
+从源码构建通用 DMG：
+
+```bash
+./macos/scripts/build-dmg.sh --unsigned
+```
+
+仓库内也保留了平台脚本作为兼容入口：
 
 | 平台 | 目录 | 入口 |
 |------|------|------|
-| Apple Silicon / Intel Mac | [`macos/`](./macos/) | 双击 `Install Codex Dream Skin.command` |
+| Apple Silicon / Intel Mac | [`macos/`](./macos/) | DMG 中的 `Codex Dream Skin.app`；兼容入口为 `.command` 脚本 |
 | Windows | [`windows/`](./windows/) | `scripts/install-dream-skin.ps1` → `start-dream-skin.ps1` |
 
 更细的说明：

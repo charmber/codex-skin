@@ -46,11 +46,19 @@ One image, one mood. Real theme previews you can ship:
 
 ## Quick start
 
-Platform scripts are ready — different plumbing, same goal: theme Codex.
+On macOS 13 or newer, download the DMG from [GitHub Releases](https://github.com/charmber/codex-skin/releases), drag the app into Applications, and open it once. The native `Skin` menu then appears in the menu bar with no SwiftBar dependency.
+
+Build a universal DMG from source:
+
+```bash
+./macos/scripts/build-dmg.sh --unsigned
+```
+
+Platform scripts remain available as compatibility entry points.
 
 | Platform | Dir | Entry |
 |------|------|------|
-| Apple Silicon / Intel Mac | [`macos/`](./macos/) | Double-click `Install Codex Dream Skin.command` |
+| Apple Silicon / Intel Mac | [`macos/`](./macos/) | `Codex Dream Skin.app` from the DMG; `.command` scripts remain available |
 | Windows | [`windows/`](./windows/) | `scripts/install-dream-skin.ps1` → `start-dream-skin.ps1` |
 
 More detail:

@@ -8,3 +8,5 @@ README.preview.html
 docs/readme-preview.html
 release/
 runtime/
+.build/
+DerivedData/
