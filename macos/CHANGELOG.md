@@ -7,7 +7,7 @@
 - 新增原生 macOS 菜单栏应用，安装后无需 SwiftBar 即可应用、暂停、换图、切换配色和恢复官方外观
 - 新增通用架构 DMG 构建，单个安装包同时支持 Apple Silicon 与 Intel Mac
 - 菜单栏可通过 macOS 系统登录项设置启用「登录时启动」
-- 新增 GitHub Actions 标签发布流程，可自动完成 Developer ID 签名、公证和 GitHub Release 上传
+- 新增 GitHub Actions 标签发布流程：当前无需 Apple 付费会员即可自动构建 unsigned DMG 并上传 GitHub Release
 
 ### 改进
 
@@ -18,7 +18,7 @@
 ### 说明
 
 - 原生菜单栏应用要求 macOS 13 或更新版本；DMG 拖入「应用程序」后仍需由用户首次打开一次
-- 公开分发建议使用 Developer ID、Hardened Runtime 和 Apple 公证；未签名本地构建会触发 Gatekeeper 提示
+- 当前 GitHub Release 的 DMG 使用 ad-hoc 签名且未经 Apple 公证，首次打开会触发 Gatekeeper 提示；后续可在购买 Apple Developer Program 后升级为 Developer ID 签名与公证
 - 主题仍只通过 `127.0.0.1` 回环 CDP 应用，不修改官方 `.app`、`app.asar` 或代码签名，也不会静默改写 API 配置
 
 ---

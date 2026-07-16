@@ -24,6 +24,8 @@ This project injects through **local loopback CDP**. It does **not** modify the 
 
 The app runs only in the menu bar and has no Dock icon. macOS does not allow a DMG to execute an app merely because it was mounted or copied, so the first manual launch is required.
 
+Current GitHub Release builds are unsigned and not notarized. On first launch, macOS may block the normal double-click flow; Control-click the app, choose **Open**, then confirm **Open** in the system dialog. Do not disable Gatekeeper globally.
+
 ## Build a DMG from source
 
 ```bash
@@ -46,9 +48,13 @@ export NOTARY_KEYCHAIN_PROFILE='codex-dream-skin-notary'
 
 ## Automated GitHub release
 
-The workflow at `.github/workflows/macos-release.yml` builds and publishes a notarized DMG when a tag such as `v1.5.0` matches `macos/VERSION`.
+The workflow at `.github/workflows/macos-release.yml` builds and publishes an unsigned universal DMG when a tag such as `v1.5.0` matches `macos/VERSION`. No Apple Developer Program membership or GitHub signing secrets are required in this mode.
 
-Configure these GitHub Actions secrets before pushing a release tag:
+Update `VERSION` and `CHANGELOG.md`, commit the release, and push the matching tag. The workflow uploads the DMG and `SHA256SUMS.txt` to GitHub Release automatically.
+
+## Future signed release
+
+After joining the Apple Developer Program, the existing `build-dmg.sh` already supports Developer ID signing and notarization. Upgrade the workflow to pass these GitHub Actions secrets:
 
 | Secret | Value |
 | --- | --- |
@@ -59,7 +65,7 @@ Configure these GitHub Actions secrets before pushing a release tag:
 | `APPLE_API_ISSUER_ID` | App Store Connect API issuer ID |
 | `APP_STORE_CONNECT_API_KEY_P8` | Complete contents of the API key `.p8` file |
 
-Then update `VERSION` and `CHANGELOG.md`, commit the release, and push the matching tag. Never commit certificates, API keys, or passwords.
+Never commit certificates, API keys, or passwords.
 
 ## Legacy script install
 

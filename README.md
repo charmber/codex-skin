@@ -47,7 +47,7 @@
 
 ## 快速开始
 
-macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。
+macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。当前 Release 为未经 Apple 公证的 unsigned 构建，首次启动请按住 Control 点击应用并选择「打开」；不要全局关闭 Gatekeeper。
 
 从源码构建通用 DMG：
 

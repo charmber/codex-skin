@@ -46,7 +46,7 @@ One image, one mood. Real theme previews you can ship:
 
 ## Quick start
 
-On macOS 13 or newer, download the DMG from [GitHub Releases](https://github.com/charmber/codex-skin/releases), drag the app into Applications, and open it once. The native `Skin` menu then appears in the menu bar with no SwiftBar dependency.
+On macOS 13 or newer, download the DMG from [GitHub Releases](https://github.com/charmber/codex-skin/releases), drag the app into Applications, and open it once. The native `Skin` menu then appears in the menu bar with no SwiftBar dependency. Current releases are unsigned and not notarized; Control-click the app and choose **Open** on first launch. Do not disable Gatekeeper globally.
 
 Build a universal DMG from source:
 
