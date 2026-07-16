@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "miku-night",
+  "name": "初音未来 · 演出夜",
+  "visualStyle": "miku-07",
+  "brandSubtitle": "MIKU CODEX / NIGHT STAGE",
+  "tagline": "灯光亮起，下一段旋律从你的代码开始。",
+  "projectPrefix": "选择舞台 · ",
+  "projectLabel": "♪  选择项目",
+  "statusText": "NIGHT STAGE ONLINE",
+  "quote": "THE FUTURE IS OURS",
+  "colors": {
+    "background": "#071a27",
+    "panel": "#0d2634",
+    "panelAlt": "#133444",
+    "accent": "#39c5bb",
+    "accentAlt": "#78f3e8",
+    "secondary": "#4ebdeb",
+    "highlight": "#ff5c8a",
+    "text": "#efffff",
+    "muted": "#9bc0ca",
+    "line": "rgba(78, 219, 207, .34)"
+  }
+}

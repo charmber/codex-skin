@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "miku-sakura",
+  "name": "初音未来 · 樱花舞台",
+  "visualStyle": "miku-07",
+  "brandSubtitle": "MIKU CODEX / SAKURA STAGE",
+  "tagline": "把春天的节拍，写进每一次运行。",
+  "projectPrefix": "选择舞台 · ",
+  "projectLabel": "♪  选择项目",
+  "statusText": "SAKURA STAGE ONLINE",
+  "quote": "SING IT INTO BLOOM",
+  "colors": {
+    "background": "#fff5f8",
+    "panel": "#ffffff",
+    "panelAlt": "#fff8fb",
+    "accent": "#2fbeb4",
+    "accentAlt": "#6ee1d9",
+    "secondary": "#7acff0",
+    "highlight": "#f4628a",
+    "text": "#3e2a38",
+    "muted": "#8a6e7e",
+    "line": "rgba(244, 98, 138, .27)"
+  }
+}

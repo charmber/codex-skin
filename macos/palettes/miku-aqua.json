@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "miku-aqua",
+  "name": "初音未来 · 未来青",
+  "visualStyle": "miku-07",
+  "brandSubtitle": "MIKU CODEX",
+  "tagline": "和初音未来一起，把灵感写成可以运行的代码。",
+  "projectPrefix": "选择舞台 · ",
+  "projectLabel": "♪  选择项目",
+  "statusText": "MIKU STAGE ONLINE",
+  "quote": "BE TOGETHER, BE FUTURE",
+  "colors": {
+    "background": "#eafcff",
+    "panel": "#ffffff",
+    "panelAlt": "#f2fbff",
+    "accent": "#39c5bb",
+    "accentAlt": "#68e3d9",
+    "secondary": "#58c9ee",
+    "highlight": "#ff6f91",
+    "text": "#173344",
+    "muted": "#657d8b",
+    "line": "rgba(57, 197, 187, .30)"
+  }
+}
