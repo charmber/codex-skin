@@ -1,4 +1,4 @@
-# Codex Dream Skin
+# Codex Skin Codex皮肤
 
 <p align="center">
   <strong>中文</strong> · <a href="./README.en.md">English</a>
