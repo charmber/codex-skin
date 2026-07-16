@@ -36,30 +36,6 @@ One image, one mood. Real theme previews you can ship:
   <sub>Red-White Sci-Fi</sub>
 </p>
 
-<p align="center">
-  <img src="docs/images/gallery/skin-04.jpg" alt="Clear Custom" width="900"><br>
-  <sub>Clear Custom</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-05.jpg" alt="Inspiration" width="900"><br>
-  <sub>Inspiration</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-06.jpg" alt="Purple Night" width="900"><br>
-  <sub>Purple Night</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-07.jpg" alt="Hatsune Miku" width="900"><br>
-  <sub>Hatsune Miku</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-08.jpg" alt="Stage Black-Gold" width="900"><br>
-  <sub>Stage Black-Gold</sub>
-</p>
 
 ## What it does
 

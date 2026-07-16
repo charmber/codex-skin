@@ -22,43 +22,18 @@
 一张图，一种心情。下面都是可落地的主题示意效果：
 
 <p align="center">
-  <img src="docs/images/gallery/skin-01.jpg" alt="粉系定制" width="900"><br>
+  <img src="docs/images/gallery/skin-01.jpg" alt="暗黑系列" width="900"><br>
   <sub>粉系定制</sub>
 </p>
 
 <p align="center">
-  <img src="docs/images/gallery/skin-02.jpg" alt="财神打工" width="900"><br>
+  <img src="docs/images/gallery/skin-02.jpg" alt="樱花舞台" width="900"><br>
   <sub>财神打工版</sub>
 </p>
 
 <p align="center">
-  <img src="docs/images/gallery/skin-03.jpg" alt="红白科幻" width="900"><br>
+  <img src="docs/images/gallery/skin-03.jpg" alt="未来青" width="900"><br>
   <sub>红白科幻</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-04.jpg" alt="清透定制" width="900"><br>
-  <sub>清透定制</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-05.jpg" alt="灵感小宇宙" width="900"><br>
-  <sub>灵感小宇宙</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-06.jpg" alt="紫夜限定" width="900"><br>
-  <sub>紫夜限定</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-07.jpg" alt="初音未来" width="900"><br>
-  <sub>初音未来</sub>
-</p>
-
-<p align="center">
-  <img src="docs/images/gallery/skin-08.jpg" alt="舞台黑金" width="900"><br>
-  <sub>舞台黑金</sub>
 </p>
 
 ## 它能做什么
