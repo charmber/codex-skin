@@ -25,23 +25,14 @@ CURRENT_JSON="$("$NODE" "$SCRIPT_DIR/update-theme-preferences.mjs" show --theme-
 CURRENT_OPACITY="$("$NODE" -e 'const v=JSON.parse(process.argv[1]);process.stdout.write(String(Math.round(v.effects.taskPanelOpacity*100)))' "$CURRENT_JSON")"
 CURRENT_BLUR="$("$NODE" -e 'const v=JSON.parse(process.argv[1]);process.stdout.write(String(v.effects.taskPanelBlur))' "$CURRENT_JSON")"
 
-prompt_number() {
-  local prompt="$1"
-  local default_value="$2"
-  DREAM_SKIN_PROMPT="$prompt" DREAM_SKIN_DEFAULT="$default_value" /usr/bin/osascript <<'APPLESCRIPT'
-set promptText to system attribute "DREAM_SKIN_PROMPT"
-set defaultValue to system attribute "DREAM_SKIN_DEFAULT"
-text returned of (display dialog promptText default answer defaultValue buttons {"取消", "继续"} default button "继续" with title "Codex Dream Skin")
-APPLESCRIPT
-}
-
-if [ -z "$OPACITY" ]; then
-  OPACITY="$(prompt_number "阅读区不透明度（0=完全透明，100=完全不透明）" "$CURRENT_OPACITY")" \
+if [ -z "$OPACITY" ] && [ -z "$BLUR" ]; then
+  DIALOG_RESULT="$(/usr/bin/osascript -l JavaScript "$SCRIPT_DIR/reading-panel-dialog-macos.js" \
+    "$CURRENT_OPACITY" "$CURRENT_BLUR" 2>/dev/null)" \
     || fail "Reading panel setup was cancelled."
-fi
-if [ -z "$BLUR" ]; then
-  BLUR="$(prompt_number "阅读区磨砂模糊强度（0–40 px）" "$CURRENT_BLUR")" \
-    || fail "Reading panel setup was cancelled."
+  IFS=$'\t' read -r OPACITY BLUR <<<"$DIALOG_RESULT"
+else
+  [ -n "$OPACITY" ] || OPACITY="$CURRENT_OPACITY"
+  [ -n "$BLUR" ] || BLUR="$CURRENT_BLUR"
 fi
 
 "$NODE" "$SCRIPT_DIR/update-theme-preferences.mjs" effects --theme-dir "$THEME_DIR" \

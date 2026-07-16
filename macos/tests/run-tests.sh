@@ -36,6 +36,18 @@ if /usr/bin/grep -F -- '-- 当前:' <<<"$MENU_OUTPUT" >/dev/null || \
   printf 'SwiftBar preference actions were accidentally nested into disabled submenus.\n' >&2
   exit 1
 fi
+DIALOG_SELF_TEST="$(LC_ALL=C /usr/bin/osascript -l JavaScript \
+  "$ROOT/scripts/reading-panel-dialog-macos.js" --self-test 68 18)"
+"$NODE" -e '
+  const value = JSON.parse(process.argv[1]);
+  if (value.title !== "调整阅读区效果" || value.opacityLabel !== "阅读区不透明度" ||
+      value.blurLabel !== "磨砂模糊强度" || value.output !== "68\t18") process.exit(1);
+' "$DIALOG_SELF_TEST"
+if /usr/bin/grep -R -n 'system attribute "DREAM_SKIN_' \
+  "$ROOT/scripts/configure-reading-panel-macos.sh" "$ROOT/scripts/customize-header-text-macos.sh" >/dev/null; then
+  printf 'Dynamic dialog copy must be passed as UTF-8 arguments, not environment attributes.\n' >&2
+  exit 1
+fi
 /bin/mkdir -p "$TMP/theme"
 /bin/cp "$ROOT/assets/portal-hero.png" "$TMP/theme/background.png"
 "$NODE" "$ROOT/scripts/write-theme.mjs" custom --output-dir "$TMP/theme" \
@@ -98,7 +110,7 @@ BACKUP="$TMP/theme-backup.json"
 "$NODE" "$ROOT/scripts/theme-config.mjs" restore "$CONFIG" "$BACKUP" >/dev/null
 /usr/bin/cmp -s "$CONFIG" "$TMP/original.toml"
 
-/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "1.3.1" ]' _ "$ROOT"
+/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "1.4.0" ]' _ "$ROOT"
 "$ROOT/scripts/doctor-macos.sh" >/dev/null
 
 printf 'PASS: syntax, payload, reading/header preferences, palette/background independence, config round-trip, HOME recovery, signature, and doctor checks.\n'

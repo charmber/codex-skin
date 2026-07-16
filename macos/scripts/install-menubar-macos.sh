@@ -48,10 +48,12 @@ if [ -d "$INSTALL_ROOT" ] && [ "$PROJECT_ROOT" != "$INSTALL_ROOT" ]; then
       /bin/chmod 755 "$INSTALL_ROOT/scripts/$name"
     fi
   done
-  if [ -f "$PROJECT_ROOT/scripts/update-theme-preferences.mjs" ]; then
-    /bin/cp -f "$PROJECT_ROOT/scripts/update-theme-preferences.mjs" "$INSTALL_ROOT/scripts/update-theme-preferences.mjs"
-    /bin/chmod 600 "$INSTALL_ROOT/scripts/update-theme-preferences.mjs"
-  fi
+  for name in update-theme-preferences.mjs reading-panel-dialog-macos.js; do
+    if [ -f "$PROJECT_ROOT/scripts/$name" ]; then
+      /bin/cp -f "$PROJECT_ROOT/scripts/$name" "$INSTALL_ROOT/scripts/$name"
+      /bin/chmod 600 "$INSTALL_ROOT/scripts/$name"
+    fi
+  done
 fi
 
 /bin/chmod 755 \

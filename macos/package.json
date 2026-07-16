@@ -1,6 +1,6 @@
 {
   "name": "codex-dream-skin-studio",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "External themes for the Codex desktop app via loopback CDP.",
   "private": true,
   "type": "module",

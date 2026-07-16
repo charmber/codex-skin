@@ -34,10 +34,12 @@ CURRENT_STATUS="$("$NODE" -e 'const v=JSON.parse(process.argv[1]);process.stdout
 prompt_text() {
   local prompt="$1"
   local default_value="$2"
-  DREAM_SKIN_PROMPT="$prompt" DREAM_SKIN_DEFAULT="$default_value" /usr/bin/osascript <<'APPLESCRIPT'
-set promptText to system attribute "DREAM_SKIN_PROMPT"
-set defaultValue to system attribute "DREAM_SKIN_DEFAULT"
-text returned of (display dialog promptText default answer defaultValue buttons {"取消", "继续"} default button "继续" with title "Codex Dream Skin")
+  /usr/bin/osascript - "$prompt" "$default_value" <<'APPLESCRIPT'
+on run argv
+  set promptText to item 1 of argv
+  set defaultValue to item 2 of argv
+  return text returned of (display dialog promptText default answer defaultValue buttons {"取消", "继续"} default button "继续" with title "Codex Dream Skin")
+end run
 APPLESCRIPT
 }
 
