@@ -36,6 +36,10 @@
   <sub>未来青</sub>
 </p>
 
+## 支持工具栏diy主题，背景，配色等功能
+<img width="255" height="522" alt="image" src="https://github.com/user-attachments/assets/eaffad01-c246-4716-83be-0ac4356580a7" />
+
+
 ## 它能做什么
 
 - **真·可交互**：侧栏、建议卡、项目选择、输入框都是原生控件，不是整窗假截图贴上去
@@ -49,7 +53,10 @@
 
 macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。当前 Release 为未经 Apple 公证的 unsigned 构建，首次启动请按住 Control 点击应用并选择「打开」；不要全局关闭 Gatekeeper。
 
-从源码构建通用 DMG：
+1.安装包安装：
+直接下载release的DMG文件，提示有风险，可以先右键，再点击打开即可安装
+
+2.从源码构建通用 DMG：
 
 ```bash
 ./macos/scripts/build-dmg.sh --unsigned
