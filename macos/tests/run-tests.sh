@@ -69,13 +69,26 @@ fi
 /bin/mkdir -p "$TMP/theme"
 /bin/cp "$ROOT/assets/portal-hero.png" "$TMP/theme/background.png"
 "$NODE" "$ROOT/scripts/write-theme.mjs" custom --output-dir "$TMP/theme" \
-  --image background.png --name '测试主题' --tagline '测试口号' --quote 'TEST' \
-  --accent '#11aa55' --secondary '#22bbcc' --highlight '#663399' >/dev/null
+  --image background.png --name '测试主题' --background-name '测试背景' --visual-style portal \
+  --brand-subtitle 'TEST CODEX' --tagline '测试口号' --project-prefix '项目 · ' \
+  --project-label '选择测试项目' --status-text 'TEST ONLINE' --quote 'TEST' \
+  --background '#081018' --panel '#102030' --panel-alt '#183048' \
+  --accent '#11aa55' --accent-alt '#44cc77' --secondary '#22bbcc' --highlight '#663399' \
+  --text '#f5fff8' --muted '#99bbaa' --line 'rgba(17, 170, 85, 0.4)' \
+  --task-panel-opacity 61 --task-panel-blur 19 \
+  --header-title '测试工作台' --header-subtitle 'TEST STAGE' --header-status 'READY' >/dev/null
 PAYLOAD_JSON="$("$NODE" "$ROOT/scripts/injector.mjs" --check-payload --theme-dir "$TMP/theme")"
 "$NODE" -e '
   const value = JSON.parse(process.argv[1]);
-  if (!value.pass || value.themeName !== "测试主题" || value.imageBytes < 1) process.exit(1);
+  if (!value.pass || value.themeName !== "测试主题" || value.backgroundName !== "测试背景" || value.imageBytes < 1) process.exit(1);
+  if (value.effects?.taskPanelOpacity !== 0.61 || value.effects?.taskPanelBlur !== 19) process.exit(1);
+  if (value.headerText?.title !== "测试工作台" || value.headerText?.subtitle !== "TEST STAGE" || value.headerText?.status !== "READY") process.exit(1);
 ' "$PAYLOAD_JSON"
+"$NODE" -e '
+  const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  if (t.colors.background !== "#081018" || t.colors.panel !== "#102030" || t.colors.panelAlt !== "#183048") process.exit(1);
+  if (t.colors.accent !== "#11aa55" || t.colors.accentAlt !== "#44cc77" || t.colors.line !== "rgba(17, 170, 85, 0.4)") process.exit(1);
+' "$TMP/theme/theme.json"
 
 "$NODE" "$ROOT/scripts/update-theme-preferences.mjs" effects --theme-dir "$TMP/theme" \
   --opacity 43 --blur 21.5 >/dev/null
@@ -109,6 +122,18 @@ PAYLOAD_JSON="$("$NODE" "$ROOT/scripts/injector.mjs" --check-payload --theme-dir
   if (value.effects?.taskPanelOpacity !== 0.43 || value.effects?.taskPanelBlur !== 21.5) process.exit(1);
   if (value.headerText?.title !== "我的初音工作台" || value.headerText?.subtitle !== "MIKU DEV STAGE" || value.headerText?.status !== "READY TO CODE") process.exit(1);
 ' "$PAYLOAD_JSON"
+
+"$NODE" "$ROOT/scripts/write-theme.mjs" custom --output-dir "$TMP/theme" \
+  --image background-next.png --inherit-theme "$TMP/theme/theme.json" \
+  --brand-subtitle '' --tagline '' --project-prefix '' --project-label '' --status-text '' --quote '' \
+  --header-title '' --header-subtitle '' --header-status '' >/dev/null
+"$NODE" -e '
+  const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  const empty = [t.brandSubtitle, t.tagline, t.projectPrefix, t.projectLabel, t.statusText, t.quote,
+    t.headerText?.title, t.headerText?.subtitle, t.headerText?.status];
+  if (empty.some((value) => value !== "")) process.exit(1);
+  if (t.paletteId !== "miku-aqua" || t.backgroundName !== "Luna") process.exit(1);
+' "$TMP/theme/theme.json"
 "$NODE" "$ROOT/scripts/write-theme.mjs" reset-demo --output-dir "$TMP/theme" >/dev/null
 [ ! -e "$TMP/theme" ]
 
@@ -144,4 +169,4 @@ else
   DOCTOR_RESULT="doctor skipped (runtime/config unavailable or live session uses another version)"
 fi
 
-printf 'PASS: syntax, payload, reading/header preferences, palette/background independence, config round-trip, HOME recovery, and %s checks.\n' "$DOCTOR_RESULT"
+printf 'PASS: syntax, full theme authoring, empty copy, palette/background independence, config round-trip, HOME recovery, and %s checks.\n' "$DOCTOR_RESULT"

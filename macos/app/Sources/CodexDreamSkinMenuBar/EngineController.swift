@@ -189,6 +189,84 @@ final class EngineController {
         jsonChoices(in: themesDirectory, nestedThemeFile: true, fallbackToFilename: true)
     }
 
+    func loadActiveTheme() throws -> ThemeDraft {
+        let userTheme = stateRoot
+            .appendingPathComponent("theme", isDirectory: true)
+            .appendingPathComponent("theme.json")
+        let bundledTheme = installRoot
+            .appendingPathComponent("assets", isDirectory: true)
+            .appendingPathComponent("theme.json")
+        let themeURL = fileManager.fileExists(atPath: userTheme.path) ? userTheme : bundledTheme
+
+        do {
+            let data = try Data(contentsOf: themeURL)
+            let theme = try JSONDecoder().decode(ThemeFile.self, from: data)
+            let imageURL = theme.image.map {
+                themeURL.deletingLastPathComponent().appendingPathComponent($0)
+            }.flatMap { fileManager.fileExists(atPath: $0.path) ? $0 : nil }
+            let defaults = ThemeDraft.blank
+            return ThemeDraft(
+                name: theme.name ?? defaults.name,
+                backgroundName: theme.backgroundName ?? theme.image ?? defaults.backgroundName,
+                visualStyle: theme.visualStyle ?? defaults.visualStyle,
+                brandSubtitle: theme.brandSubtitle ?? defaults.brandSubtitle,
+                tagline: theme.tagline ?? defaults.tagline,
+                projectPrefix: theme.projectPrefix ?? defaults.projectPrefix,
+                projectLabel: theme.projectLabel ?? defaults.projectLabel,
+                statusText: theme.statusText ?? defaults.statusText,
+                quote: theme.quote ?? defaults.quote,
+                imageURL: imageURL,
+                colors: theme.colors ?? defaults.colors,
+                effects: theme.effects ?? defaults.effects,
+                headerText: theme.headerText ?? defaults.headerText
+            )
+        } catch {
+            throw EngineError.themeUnavailable(error.localizedDescription)
+        }
+    }
+
+    func saveTheme(
+        _ draft: ThemeDraft,
+        applyImmediately: Bool,
+        completion: @escaping (Result<ScriptResult, Error>) -> Void
+    ) {
+        guard let imageURL = draft.imageURL else {
+            completion(.failure(EngineError.themeUnavailable("请先选择一张背景图片。")))
+            return
+        }
+        let colors = draft.colors
+        var arguments = [
+            "--image", imageURL.path,
+            "--name", draft.name,
+            "--background-name", draft.backgroundName,
+            "--visual-style", draft.visualStyle,
+            "--brand-subtitle", draft.brandSubtitle,
+            "--tagline", draft.tagline,
+            "--project-prefix", draft.projectPrefix,
+            "--project-label", draft.projectLabel,
+            "--status-text", draft.statusText,
+            "--quote", draft.quote,
+            "--background-color", colors.background,
+            "--panel-color", colors.panel,
+            "--panel-alt-color", colors.panelAlt,
+            "--accent", colors.accent,
+            "--accent-alt", colors.accentAlt,
+            "--secondary", colors.secondary,
+            "--highlight", colors.highlight,
+            "--text-color", colors.text,
+            "--muted-color", colors.muted,
+            "--line-color", colors.line,
+            "--task-panel-opacity", String(draft.effects.taskPanelOpacity * 100),
+            "--task-panel-blur", String(draft.effects.taskPanelBlur),
+            "--header-title", draft.headerText.title ?? "",
+            "--header-subtitle", draft.headerText.subtitle ?? "",
+            "--header-status", draft.headerText.status ?? "",
+            "--save-theme"
+        ]
+        if !applyImmediately { arguments.append("--no-apply") }
+        runScript("customize-theme-macos.sh", arguments: arguments, completion: completion)
+    }
+
     private func jsonChoices(
         in directory: URL,
         nestedThemeFile: Bool = false,
@@ -215,7 +293,9 @@ final class EngineController {
                   let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                 return nil
             }
-            let id = (value["id"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? fallbackID
+            let id = nestedThemeFile
+                ? fallbackID
+                : (value["id"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? fallbackID
             let name = (value["name"] as? String).flatMap { $0.isEmpty ? nil : $0 }
                 ?? (fallbackToFilename ? fallbackID : id)
             return NamedChoice(id: id, name: name)

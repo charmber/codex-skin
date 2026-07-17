@@ -9,6 +9,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var status = SkinStatus.empty
     private var isBusy = true
     private var deploymentError: Error?
+    private var themeEditor: ThemeEditorWindowController?
+    private let shouldOpenThemeEditor = CommandLine.arguments.contains("--open-theme-editor") ||
+        ProcessInfo.processInfo.environment["CODEX_DREAM_SKIN_OPEN_EDITOR"] == "1"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureStatusItem()
@@ -26,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return
             }
             self.refreshStatus()
+            if self.shouldOpenThemeEditor { self.openThemeEditor() }
             self.warnWhenRunningFromDiskImage()
         }
 
@@ -107,7 +111,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             menu.addItem(actionItem("应用皮肤...", action: #selector(applySkin)))
             menu.addItem(actionItem("暂停皮肤", action: #selector(pauseSkin)))
-            menu.addItem(actionItem("换一张图...", action: #selector(customizeTheme)))
+            menu.addItem(actionItem("打开主题工作室...", action: #selector(openThemeEditor)))
+            menu.addItem(actionItem("快速换背景图...", action: #selector(customizeTheme)))
             menu.addItem(actionItem(
                 "阅读区：\(format(status.taskPanelOpacityPercent))% / \(format(status.taskPanelBlur))px",
                 action: #selector(configureReadingPanel)
@@ -235,6 +240,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func customizeTheme() {
         runAction(title: "正在打开图片选择器...", script: "customize-theme-macos.sh")
+    }
+
+    @objc private func openThemeEditor() {
+        menu.cancelTracking()
+        if themeEditor == nil {
+            themeEditor = ThemeEditorWindowController(engine: engine) { [weak self] in
+                self?.refreshStatus()
+            }
+        }
+        themeEditor?.present()
     }
 
     @objc private func configureReadingPanel() {

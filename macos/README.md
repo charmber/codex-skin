@@ -48,7 +48,7 @@ export NOTARY_KEYCHAIN_PROFILE='codex-dream-skin-notary'
 
 ## Automated GitHub release
 
-The workflow at `.github/workflows/macos-release.yml` builds and publishes an unsigned universal DMG when a tag such as `v1.5.0` matches `macos/VERSION`. No Apple Developer Program membership or GitHub signing secrets are required in this mode.
+The workflow at `.github/workflows/macos-release.yml` builds and publishes an unsigned universal DMG when a tag such as `v1.6.0` matches `macos/VERSION`. No Apple Developer Program membership or GitHub signing secrets are required in this mode.
 
 Update `VERSION` and `CHANGELOG.md`, commit the release, and push the matching tag. The workflow uploads the DMG and `SHA256SUMS.txt` to GitHub Release automatically.
 
@@ -101,16 +101,25 @@ Install location after step 2:
 | State / logs / user images | `~/Library/Application Support/CodexDreamSkinStudio` |
 | Theme backup | under Application Support (`theme-backup.json`) |
 
-## Switch the skin-07 palette and background
+## Create and switch themes
 
-The native `Skin` menu keeps these choices independent:
+Choose `打开主题工作室…` from the native `Skin` menu to create a complete theme. The editor exposes:
+
+- Theme and background names, a live image preview, background picker, and visual-shell style.
+- All ten theme colors: page, two panels, two accents, secondary, highlight, primary/muted text, and borders.
+- Home/project copy, top header copy, task-panel opacity, and backdrop blur.
+- `新建主题` for a clean draft and `保存后立即应用` for optional hot apply.
+
+Every save creates a self-contained entry under the user theme library with its associated prepared background. Saved themes appear under `历史组合` and can be loaded again later.
+
+The quick choices remain available and independent:
 
 - `配色主题` changes the interface colors and shell. Choose `初音未来 · 未来青`, `演出夜`, or `樱花舞台`.
 - `背景图片` changes only the pure image. It keeps the selected palette.
-- `换一张图…` imports another image, saves it in the local image library, and keeps the selected palette.
+- `快速换背景图…` imports another image and keeps the selected palette.
 - `调整阅读区磨砂与透明度…` sets task-panel opacity from 0–100 and backdrop blur from 0–40 px.
 - `自定义顶部文字…` edits the top-left title/subtitle and top-right status text; an empty value hides that line.
-- `历史组合` is retained for themes saved by older versions; choosing one restores that old combined snapshot.
+- `历史组合` restores any complete theme snapshot created by the studio or an older version.
 
 Reading-panel and header-text preferences are independent from palettes and backgrounds, so later switches keep your values.
 

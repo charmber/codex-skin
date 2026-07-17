@@ -10,7 +10,7 @@ function valueFor(name, fallback = "") {
   const index = args.indexOf(`--${name}`);
   if (index < 0) return fallback;
   const value = args[index + 1];
-  if (!value || value.startsWith("--")) throw new Error(`Missing value for --${name}`);
+  if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for --${name}`);
   return value;
 }
 
@@ -58,6 +58,19 @@ async function readJson(file, label) {
 
 function text(value, fallback, max) {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : fallback;
+}
+
+function editableText(name, inheritedValue, fallback, max) {
+  if (hasValue(name)) return String(valueFor(name)).trim().slice(0, max);
+  return text(inheritedValue, fallback, max);
+}
+
+function numberBetween(value, name, minimum, maximum) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${name} must be between ${minimum} and ${maximum}.`);
+  }
+  return parsed;
 }
 
 function normalizePalette(raw, source) {
@@ -136,45 +149,65 @@ if (!imageStat.isFile() || imageStat.size < 1 || imageStat.size > 16 * 1024 * 10
   throw new Error("The prepared theme image must be non-empty and no larger than 16 MB.");
 }
 
-const backgroundName = text(valueFor("background-name", valueFor("name", "")), "我的背景", 80);
+const backgroundName = text(
+  valueFor("background-name", inherited.backgroundName || valueFor("name", "")),
+  "我的背景",
+  80,
+);
 const inheritedColors = inherited.colors && typeof inherited.colors === "object" ? inherited.colors : {};
 const accent = validateHex(valueFor("accent", inheritedColors.accent || "#7cff46"), "accent");
 const secondary = validateHex(valueFor("secondary", inheritedColors.secondary || "#36d7e8"), "secondary");
 const highlight = validateHex(valueFor("highlight", inheritedColors.highlight || "#642a8c"), "highlight");
-const accentAlt = hasValue("accent") ? accent : validateColor(inheritedColors.accentAlt || accent, "accentAlt");
-const paletteName = text(inherited.paletteName, "", 80);
-const name = paletteName || text(valueFor("name", inherited.name || "我的 Codex Dream Skin"), "我的 Codex Dream Skin", 80);
-const tagline = text(valueFor("tagline", inherited.tagline || "把喜欢的画面变成可交互的 Codex 工作台。"), "把喜欢的画面变成可交互的 Codex 工作台。", 160);
-const quote = text(valueFor("quote", inherited.quote || "MAKE SOMETHING WONDERFUL"), "MAKE SOMETHING WONDERFUL", 80);
+const accentAlt = validateColor(
+  valueFor("accent-alt", hasValue("accent") ? accent : inheritedColors.accentAlt || accent),
+  "accentAlt",
+);
+const name = text(valueFor("name", inherited.name || "我的 Codex Dream Skin"), "我的 Codex Dream Skin", 80);
+const paletteName = text(valueFor("palette-name", inherited.paletteName || name), name, 80);
+const existingEffects = inherited.effects && typeof inherited.effects === "object" ? inherited.effects : {};
+const effects = {
+  taskPanelOpacity: hasValue("task-panel-opacity")
+    ? numberBetween(valueFor("task-panel-opacity"), "taskPanelOpacity", 0, 100) / 100
+    : numberBetween(existingEffects.taskPanelOpacity ?? 0.76, "taskPanelOpacity", 0, 1),
+  taskPanelBlur: hasValue("task-panel-blur")
+    ? numberBetween(valueFor("task-panel-blur"), "taskPanelBlur", 0, 40)
+    : numberBetween(existingEffects.taskPanelBlur ?? 14, "taskPanelBlur", 0, 40),
+};
+const existingHeader = inherited.headerText && typeof inherited.headerText === "object" ? inherited.headerText : {};
+const headerText = {
+  title: editableText("header-title", existingHeader.title, "", 80),
+  subtitle: editableText("header-subtitle", existingHeader.subtitle, "", 80),
+  status: editableText("header-status", existingHeader.status, "", 80),
+};
 
 const custom = {
   schemaVersion: 1,
   id: `custom-${Date.now()}`,
   name,
-  paletteId: text(inherited.paletteId, "custom", 80),
-  paletteName: paletteName || name,
+  paletteId: text(valueFor("palette-id", inherited.paletteId || "custom"), "custom", 80),
+  paletteName,
   backgroundName,
-  visualStyle: text(inherited.visualStyle, "portal", 80),
-  brandSubtitle: text(inherited.brandSubtitle, "CODEX DREAM SKIN", 80),
-  tagline,
-  projectPrefix: text(inherited.projectPrefix, "选择项目 · ", 80),
-  projectLabel: text(inherited.projectLabel, "◉  选择项目", 80),
-  statusText: text(inherited.statusText, "DREAM SKIN ONLINE", 80),
-  quote,
+  visualStyle: text(valueFor("visual-style", inherited.visualStyle || "portal"), "portal", 80),
+  brandSubtitle: editableText("brand-subtitle", inherited.brandSubtitle, "CODEX DREAM SKIN", 80),
+  tagline: editableText("tagline", inherited.tagline, "把喜欢的画面变成可交互的 Codex 工作台。", 160),
+  projectPrefix: editableText("project-prefix", inherited.projectPrefix, "选择项目 · ", 80),
+  projectLabel: editableText("project-label", inherited.projectLabel, "◉  选择项目", 80),
+  statusText: editableText("status-text", inherited.statusText, "DREAM SKIN ONLINE", 80),
+  quote: editableText("quote", inherited.quote, "MAKE SOMETHING WONDERFUL", 80),
   image,
-  effects: inherited.effects && typeof inherited.effects === "object" ? inherited.effects : undefined,
-  headerText: inherited.headerText && typeof inherited.headerText === "object" ? inherited.headerText : undefined,
+  effects,
+  headerText,
   colors: {
-    background: validateColor(inheritedColors.background || "#071116", "background"),
-    panel: validateColor(inheritedColors.panel || "#0b1a20", "panel"),
-    panelAlt: validateColor(inheritedColors.panelAlt || "#10272c", "panelAlt"),
+    background: validateColor(valueFor("background", inheritedColors.background || "#071116"), "background"),
+    panel: validateColor(valueFor("panel", inheritedColors.panel || "#0b1a20"), "panel"),
+    panelAlt: validateColor(valueFor("panel-alt", inheritedColors.panelAlt || "#10272c"), "panelAlt"),
     accent,
     accentAlt,
     secondary,
     highlight,
-    text: validateColor(inheritedColors.text || "#f2fff7", "text"),
-    muted: validateColor(inheritedColors.muted || "#a7c2ba", "muted"),
-    line: hasValue("accent") ? hexToRgba(accent, 0.32) : validateColor(inheritedColors.line || hexToRgba(accent, 0.32), "line"),
+    text: validateColor(valueFor("text", inheritedColors.text || "#f2fff7"), "text"),
+    muted: validateColor(valueFor("muted", inheritedColors.muted || "#a7c2ba"), "muted"),
+    line: validateColor(valueFor("line", inheritedColors.line || hexToRgba(accent, 0.32)), "line"),
   },
 };
 

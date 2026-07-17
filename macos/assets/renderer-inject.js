@@ -166,9 +166,9 @@
     root.style.setProperty("--ds-task-panel-opacity-soft", `${Math.round(Math.max(0, opacity - 0.21) * 100)}%`);
     root.style.setProperty("--ds-task-panel-blur", `${Math.round(blur * 10) / 10}px`);
     root.style.setProperty("--dream-skin-name", cssString(THEME.name || "Codex Dream Skin"));
-    root.style.setProperty("--dream-skin-tagline", cssString(THEME.tagline || "Make something wonderful."));
-    root.style.setProperty("--dream-skin-project-prefix", cssString(THEME.projectPrefix || "选择项目 · "));
-    root.style.setProperty("--dream-skin-project-label", cssString(THEME.projectLabel || "◉  选择项目"));
+    root.style.setProperty("--dream-skin-tagline", cssString(typeof THEME.tagline === "string" ? THEME.tagline : "Make something wonderful."));
+    root.style.setProperty("--dream-skin-project-prefix", cssString(typeof THEME.projectPrefix === "string" ? THEME.projectPrefix : "选择项目 · "));
+    root.style.setProperty("--dream-skin-project-label", cssString(typeof THEME.projectLabel === "string" ? THEME.projectLabel : "◉  选择项目"));
   };
 
   const existingStyle = document.getElementById(STYLE_ID);
@@ -234,10 +234,11 @@
     chrome.querySelector(".dream-skin-brand b").textContent = typeof headerText.title === "string"
       ? headerText.title : (THEME.name || "Codex Dream Skin");
     chrome.querySelector(".dream-skin-brand small").textContent = typeof headerText.subtitle === "string"
-      ? headerText.subtitle : (THEME.brandSubtitle || "CODEX DREAM SKIN");
+      ? headerText.subtitle : (typeof THEME.brandSubtitle === "string" ? THEME.brandSubtitle : "CODEX DREAM SKIN");
     chrome.querySelector(".dream-skin-status span").textContent = typeof headerText.status === "string"
-      ? headerText.status : (THEME.statusText || "DREAM SKIN ONLINE");
-    chrome.querySelector(".dream-skin-quote").textContent = THEME.quote || "MAKE SOMETHING WONDERFUL";
+      ? headerText.status : (typeof THEME.statusText === "string" ? THEME.statusText : "DREAM SKIN ONLINE");
+    chrome.querySelector(".dream-skin-quote").textContent = typeof THEME.quote === "string"
+      ? THEME.quote : "MAKE SOMETHING WONDERFUL";
     const shellBox = shellMain.getBoundingClientRect();
     chrome.style.left = `${Math.round(shellBox.left)}px`;
     chrome.style.top = `${Math.round(shellBox.top)}px`;

@@ -36,11 +36,50 @@ One image, one mood. Real theme previews you can ship:
   <sub>Red-White Sci-Fi</sub>
 </p>
 
+## Theme Studio in 1.6.0
+
+Open `Skin → 打开主题工作室…` from the menu bar to create a complete theme. Continue from the active theme or choose `新建主题` to start with a clean configuration:
+
+- Name the theme, choose and preview its associated background, and select the Portal or Future Stage shell
+- Customize all ten interface colors across the page, panels, accents, text, and borders
+- Edit home copy, project actions, status text, theme quote, and top-header labels
+- Tune task-panel opacity and backdrop blur
+- Save a reusable theme snapshot, with optional immediate hot apply to the current Codex session
+
+### Color Palette
+
+The palette editor covers the page background, primary and secondary panels, two accent colors, secondary and highlight colors, primary and muted text, plus borders and separators. Color swatches use the native macOS picker, and the border color supports transparency.
+
+<p align="center">
+  <img src="docs/Color_matching.jpg" alt="Codex Dream Skin color palette editor" width="900"><br>
+  <sub>Complete color palette with the associated background preview</sub>
+</p>
+
+### Theme Copy
+
+Configure the brand subtitle, home description, project prefix and button, status label, and theme quote independently. Optional copy can be left empty when it should stay hidden.
+
+<p align="center">
+  <img src="docs/Theme_copywriting.jpg" alt="Codex Dream Skin theme copy editor" width="900"><br>
+  <sub>Home and project copy settings</sub>
+</p>
+
+### Interface Effects
+
+The effects panel keeps task-reading opacity, backdrop blur, the top-left title and subtitle, and the top-right status text in one place.
+
+<p align="center">
+  <img src="docs/Interface_effect.jpg" alt="Codex Dream Skin interface effects editor" width="900"><br>
+  <sub>Reading-panel effects and top-header text</sub>
+</p>
+
 
 ## What it does
 
 - **Real UI** — Sidebar, cards, project picker, and input stay native. Not a fake full-window screenshot.
-- **Swappable art** — Drop in an image you like and it becomes your theme.
+- **Complete theme studio** — Create themes with an associated background preview, all ten interface colors, home/header copy, and reading effects.
+- **Reusable themes** — Every save creates a complete theme snapshot that can be loaded again from the menu.
+- **Quick background swap** — Drop in a new image without losing the selected palette.
 - **Restorable** — One-click restore to the stock look.
 - **Safer path** — Local-loopback CDP inject only. No official binary or signature changes.
 
