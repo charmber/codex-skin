@@ -53,16 +53,29 @@
 
 macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。当前 Release 为未经 Apple 公证的 unsigned 构建，首次启动请按住 Control 点击应用并选择「打开」；不要全局关闭 Gatekeeper。
 
-1.安装包安装：
+**1.安装包安装：**
+
 直接下载release的DMG文件，提示有风险，可以先右键，再点击打开即可安装
 
-2.从源码构建通用 DMG：
+如提示这个为正常显示：
+<img width="520" height="470" alt="image" src="https://github.com/user-attachments/assets/3af7303b-4a79-4e02-8519-39d220547367" />
+
+从**设置**打开搜索**隐私与安全性**
+<img width="220" height="125" alt="image" src="https://github.com/user-attachments/assets/06774080-4561-492c-8a6d-e0ffca70690a" />
+
+然后选择仍要打开
+<img width="723" height="625" alt="image" src="https://github.com/user-attachments/assets/918f1b06-6b46-4cba-8ff5-54805ee97f98" />
+然后就可以在搜索栏搜索之后打开了
+<img width="803" height="776" alt="image" src="https://github.com/user-attachments/assets/017c6454-7f31-4bf3-b951-a4421dbaf191" />
+
+
+**2.从源码构建通用 DMG：**
 
 ```bash
 ./macos/scripts/build-dmg.sh --unsigned
 ```
 
-仓库内也保留了平台脚本作为兼容入口：
+**3.仓库内也保留了平台脚本作为兼容入口：**
 
 | 平台 | 目录 | 入口 |
 |------|------|------|
