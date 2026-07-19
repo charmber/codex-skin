@@ -99,10 +99,10 @@ ICONSET="$TMP/AppIcon.iconset"
 /usr/bin/xcrun swift "$APP_SOURCE/Tools/GenerateAppIcon.swift" "$ICONSET"
 /usr/bin/iconutil -c icns "$ICONSET" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
-for directory in assets palettes scripts; do
+for directory in layouts palettes renderer schemas scripts themes; do
   /usr/bin/rsync -a "$ROOT/$directory/" "$APP_BUNDLE/Contents/Resources/Engine/$directory/"
 done
-for file in VERSION LICENSE NOTICE.md README.md package.json; do
+for file in VERSION LICENSE NOTICE.md README.md THEME_PACKAGE.md package.json; do
   [ -f "$ROOT/$file" ] && /bin/cp "$ROOT/$file" "$APP_BUNDLE/Contents/Resources/Engine/$file"
 done
 /bin/chmod 700 "$APP_BUNDLE/Contents/Resources/Engine/scripts/"*.sh

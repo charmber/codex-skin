@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "id": "miku-night",
   "name": "初音未来 · 演出夜",
+  "layoutId": "stage",
   "visualStyle": "miku-07",
   "brandSubtitle": "MIKU CODEX / NIGHT STAGE",
   "tagline": "灯光亮起，下一段旋律从你的代码开始。",

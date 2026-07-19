@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "id": "miku-aqua",
   "name": "初音未来 · 未来青",
+  "layoutId": "stage",
   "visualStyle": "miku-07",
   "brandSubtitle": "MIKU CODEX",
   "tagline": "和初音未来一起，把灵感写成可以运行的代码。",

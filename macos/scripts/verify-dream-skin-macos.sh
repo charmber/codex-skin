@@ -26,4 +26,4 @@ verified_cdp_endpoint "$PORT" || fail "Port $PORT is not a verified Codex loopba
 ARGS=("$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 30000)
 [ -n "$SCREENSHOT" ] && ARGS+=(--screenshot "$SCREENSHOT")
 [ "$RELOAD" = "true" ] && ARGS+=(--reload)
-exec "$NODE" "${ARGS[@]}"
+run_with_deadline 40 "$NODE" "${ARGS[@]}"

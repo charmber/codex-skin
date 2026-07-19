@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": 1,
+  "id": "codex-dream-skin-renderer",
+  "name": "Codex Dream Skin Renderer",
+  "layouts": {
+    "stage": {
+      "name": "未来舞台",
+      "kind": "stage",
+      "stylesheet": "layouts/stage/dream-skin.css",
+      "script": "layouts/stage/renderer-inject.js",
+      "assets": {}
+    },
+    "qq-classic": {
+      "name": "经典蓝 QQ 工作台",
+      "kind": "qq-classic",
+      "stylesheet": "layouts/qq-classic/qq-classic.css",
+      "script": "layouts/qq-classic/qq-classic-renderer.js",
+      "assets": {
+        "pet": "layouts/qq-classic/codex-pet.png",
+        "retroFrame": "layouts/qq-classic/retro-window-frame.png",
+        "avatar": "layouts/qq-classic/qq-avatar.png"
+      }
+    }
+  }
+}

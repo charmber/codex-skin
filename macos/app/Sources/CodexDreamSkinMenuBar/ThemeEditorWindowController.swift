@@ -2,6 +2,10 @@ import AppKit
 import UniformTypeIdentifiers
 
 final class ThemeEditorWindowController: NSWindowController {
+    private let layoutStyles: [(id: String, title: String, visualStyle: String)] = [
+        ("stage", "未来舞台", "miku-07"),
+        ("qq-classic", "经典蓝 QQ 工作台", "classic-blue-07")
+    ]
     private let engine: EngineController
     private let onSaved: () -> Void
     private var draft = ThemeDraft.blank
@@ -9,6 +13,10 @@ final class ThemeEditorWindowController: NSWindowController {
 
     private let preview = NSImageView()
     private let imagePathLabel = NSTextField(labelWithString: "请选择一张背景图片")
+    private let userAvatarPreview = NSImageView()
+    private let assistantAvatarPreview = NSImageView()
+    private let userAvatarPathLabel = NSTextField(labelWithString: "未设置")
+    private let assistantAvatarPathLabel = NSTextField(labelWithString: "未设置")
     private let nameField = NSTextField()
     private let backgroundNameField = NSTextField()
     private let stylePopup = NSPopUpButton()
@@ -25,6 +33,22 @@ final class ThemeEditorWindowController: NSWindowController {
     private let blurSlider = NSSlider(value: 14, minValue: 0, maxValue: 40, target: nil, action: nil)
     private let opacityValueLabel = NSTextField(labelWithString: "76%")
     private let blurValueLabel = NSTextField(labelWithString: "14 px")
+    private let retroHeaderCheckbox = NSButton(checkboxWithTitle: "双层经典标题区", target: nil, action: nil)
+    private let toolbarCheckbox = NSButton(checkboxWithTitle: "快捷工具栏", target: nil, action: nil)
+    private let threePaneCheckbox = NSButton(checkboxWithTitle: "任务页三栏布局", target: nil, action: nil)
+    private let autoSummaryCheckbox = NSButton(checkboxWithTitle: "自动打开原生置顶摘要", target: nil, action: nil)
+    private let companionCheckbox = NSButton(checkboxWithTitle: "右侧 Codex 伙伴卡", target: nil, action: nil)
+    private let profileCheckbox = NSButton(checkboxWithTitle: "左下在线资料卡", target: nil, action: nil)
+    private let homePetCheckbox = NSButton(checkboxWithTitle: "新建任务页角色", target: nil, action: nil)
+    private let layoutMinWidthField = NSTextField()
+    private let layoutRightWidthField = NSTextField()
+    private let layoutWindowTitleField = NSTextField()
+    private let layoutProfileNameField = NSTextField()
+    private let layoutProfileStatusField = NSTextField()
+    private let layoutCompanionTitleField = NSTextField()
+    private let layoutCompanionStatusField = NSTextField()
+    private let layoutComponentsStack = NSStackView()
+    private let layoutAvailabilityLabel = NSTextField(wrappingLabelWithString: "")
     private let applyCheckbox = NSButton(checkboxWithTitle: "保存后立即应用", target: nil, action: nil)
     private let saveButton = NSButton(title: "保存主题", target: nil, action: nil)
     private let statusLabel = NSTextField(labelWithString: "")
@@ -162,14 +186,16 @@ final class ThemeEditorWindowController: NSWindowController {
 
         configureTextField(nameField, placeholder: "例如：深海工作台")
         configureTextField(backgroundNameField, placeholder: "例如：蓝色海面")
-        stylePopup.addItems(withTitles: ["传送门", "未来舞台"])
+        stylePopup.addItems(withTitles: layoutStyles.map { $0.title })
+        stylePopup.target = self
+        stylePopup.action = #selector(layoutSelectionChanged)
 
         let stack = NSStackView(views: [
             sectionTitle("背景预览"), preview, imagePathLabel, chooseButton,
             separator(),
             fieldGroup("主题名称", nameField),
             fieldGroup("背景名称", backgroundNameField),
-            fieldGroup("界面样式", stylePopup)
+            fieldGroup("布局主题", stylePopup)
         ])
         stack.orientation = .vertical
         stack.alignment = .leading
@@ -188,7 +214,9 @@ final class ThemeEditorWindowController: NSWindowController {
         tabController.tabStyle = .segmentedControlOnTop
         tabController.addTabViewItem(tab(title: "颜色搭配", view: buildColorsView()))
         tabController.addTabViewItem(tab(title: "主题文案", view: buildCopyView()))
+        tabController.addTabViewItem(tab(title: "对话头像", view: buildAvatarsView()))
         tabController.addTabViewItem(tab(title: "界面效果", view: buildEffectsView()))
+        tabController.addTabViewItem(tab(title: "布局组件", view: buildLayoutComponentsView()))
         return tabController.view
     }
 
@@ -252,6 +280,82 @@ final class ThemeEditorWindowController: NSWindowController {
         return inset(stack)
     }
 
+    private func buildAvatarsView() -> NSView {
+        let grid = NSGridView(views: [[
+            avatarControl(
+                title: "我的提问",
+                preview: userAvatarPreview,
+                pathLabel: userAvatarPathLabel,
+                chooseAction: #selector(chooseUserAvatar),
+                removeAction: #selector(removeUserAvatar)
+            ),
+            avatarControl(
+                title: "Codex 回答",
+                preview: assistantAvatarPreview,
+                pathLabel: assistantAvatarPathLabel,
+                chooseAction: #selector(chooseAssistantAvatar),
+                removeAction: #selector(removeAssistantAvatar)
+            )
+        ]])
+        grid.columnSpacing = 34
+        grid.column(at: 0).xPlacement = .fill
+        grid.column(at: 1).xPlacement = .fill
+
+        let stack = NSStackView(views: [sectionTitle("一问一答头像"), grid])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 18
+        grid.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        return inset(stack)
+    }
+
+    private func avatarControl(
+        title: String,
+        preview: NSImageView,
+        pathLabel: NSTextField,
+        chooseAction: Selector,
+        removeAction: Selector
+    ) -> NSView {
+        preview.imageScaling = .scaleProportionallyUpOrDown
+        preview.imageAlignment = .alignCenter
+        preview.wantsLayer = true
+        preview.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        preview.layer?.cornerRadius = 56
+        preview.layer?.masksToBounds = true
+        preview.layer?.borderWidth = 1
+        preview.layer?.borderColor = NSColor.separatorColor.cgColor
+        preview.translatesAutoresizingMaskIntoConstraints = false
+        preview.widthAnchor.constraint(equalToConstant: 112).isActive = true
+        preview.heightAnchor.constraint(equalToConstant: 112).isActive = true
+
+        pathLabel.font = .systemFont(ofSize: 11)
+        pathLabel.textColor = .secondaryLabelColor
+        pathLabel.alignment = .center
+        pathLabel.lineBreakMode = .byTruncatingMiddle
+        pathLabel.maximumNumberOfLines = 2
+
+        let chooseButton = NSButton(title: "选择图片", target: self, action: chooseAction)
+        chooseButton.image = NSImage(systemSymbolName: "photo.badge.plus", accessibilityDescription: "选择头像图片")
+        chooseButton.imagePosition = .imageLeading
+        let removeButton = NSButton(title: "移除", target: self, action: removeAction)
+        removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: "移除头像")
+        removeButton.imagePosition = .imageLeading
+        let actions = NSStackView(views: [chooseButton, removeButton])
+        actions.orientation = .horizontal
+        actions.alignment = .centerY
+        actions.spacing = 8
+
+        let label = NSTextField(labelWithString: title)
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.alignment = .center
+        let stack = NSStackView(views: [label, preview, pathLabel, actions])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 10
+        pathLabel.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        return stack
+    }
+
     private func buildEffectsView() -> NSView {
         configureTextField(headerTitleField, placeholder: "左侧标题，可留空")
         configureTextField(headerSubtitleField, placeholder: "左侧副标题，可留空")
@@ -280,6 +384,62 @@ final class ThemeEditorWindowController: NSWindowController {
             field.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
         return inset(stack)
+    }
+
+    private func buildLayoutComponentsView() -> NSView {
+        layoutAvailabilityLabel.font = .systemFont(ofSize: 11)
+        layoutAvailabilityLabel.textColor = .secondaryLabelColor
+
+        for field in [layoutMinWidthField, layoutRightWidthField] {
+            configureTextField(field, placeholder: "像素")
+            field.formatter = NumberFormatter()
+        }
+        configureTextField(layoutWindowTitleField, placeholder: "Codex 2007")
+        configureTextField(layoutProfileNameField, placeholder: "留空则使用当前 Codex 账号名")
+        configureTextField(layoutProfileStatusField, placeholder: "在线")
+        configureTextField(layoutCompanionTitleField, placeholder: "Codex 伙伴")
+        configureTextField(layoutCompanionStatusField, placeholder: "在线 · 随时待命")
+
+        let toggles = NSGridView(views: [
+            [retroHeaderCheckbox, toolbarCheckbox],
+            [threePaneCheckbox, autoSummaryCheckbox],
+            [companionCheckbox, profileCheckbox],
+            [homePetCheckbox, NSView()]
+        ])
+        toggles.rowSpacing = 8
+        toggles.columnSpacing = 22
+        toggles.column(at: 0).xPlacement = .leading
+        toggles.column(at: 1).xPlacement = .leading
+
+        let widths = NSGridView(views: [[
+            fieldGroup("启用三栏的最小窗口宽度", layoutMinWidthField),
+            fieldGroup("右栏宽度", layoutRightWidthField)
+        ]])
+        widths.columnSpacing = 18
+        widths.column(at: 0).xPlacement = .fill
+        widths.column(at: 1).xPlacement = .fill
+
+        let reset = NSButton(title: "恢复经典蓝默认组件", target: self, action: #selector(resetLayoutComponents))
+        reset.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "恢复经典蓝默认组件")
+        reset.imagePosition = .imageLeading
+
+        layoutComponentsStack.setViews([
+            sectionTitle("经典蓝组件"), layoutAvailabilityLabel, toggles, widths,
+            separator(), fieldGroup("窗口标题", layoutWindowTitleField),
+            fieldGroup("资料卡名称", layoutProfileNameField),
+            fieldGroup("资料卡状态", layoutProfileStatusField),
+            fieldGroup("伙伴卡标题", layoutCompanionTitleField),
+            fieldGroup("伙伴卡状态", layoutCompanionStatusField), reset
+        ], in: .top)
+        layoutComponentsStack.orientation = .vertical
+        layoutComponentsStack.alignment = .leading
+        layoutComponentsStack.spacing = 10
+        for field in [layoutWindowTitleField, layoutProfileNameField, layoutProfileStatusField,
+                      layoutCompanionTitleField, layoutCompanionStatusField] {
+            field.widthAnchor.constraint(equalTo: layoutComponentsStack.widthAnchor).isActive = true
+        }
+        widths.widthAnchor.constraint(equalTo: layoutComponentsStack.widthAnchor).isActive = true
+        return inset(layoutComponentsStack)
     }
 
     private func tab(title: String, view: NSView) -> NSTabViewItem {
@@ -382,7 +542,7 @@ final class ThemeEditorWindowController: NSWindowController {
     private func populateControls() {
         nameField.stringValue = draft.name
         backgroundNameField.stringValue = draft.backgroundName
-        stylePopup.selectItem(at: draft.visualStyle == "miku-07" ? 1 : 0)
+        stylePopup.selectItem(at: layoutStyles.firstIndex { $0.id == draft.layoutId } ?? 0)
         brandSubtitleField.stringValue = draft.brandSubtitle
         taglineField.stringValue = draft.tagline
         projectPrefixField.stringValue = draft.projectPrefix
@@ -397,6 +557,57 @@ final class ThemeEditorWindowController: NSWindowController {
         applyColors(draft.colors)
         updateEffectLabels()
         updateImagePreview()
+        updateAvatarPreviews()
+        populateLayoutComponents()
+        updateLayoutComponentAvailability()
+    }
+
+    private func populateLayoutComponents() {
+        let value = draft.layoutComponents
+        retroHeaderCheckbox.state = value.retroHeader ? .on : .off
+        toolbarCheckbox.state = value.toolbar ? .on : .off
+        threePaneCheckbox.state = value.threePane ? .on : .off
+        autoSummaryCheckbox.state = value.autoOpenSummary ? .on : .off
+        companionCheckbox.state = value.companion ? .on : .off
+        profileCheckbox.state = value.profileCard ? .on : .off
+        homePetCheckbox.state = value.homePet ? .on : .off
+        layoutMinWidthField.doubleValue = value.minWidth
+        layoutRightWidthField.doubleValue = value.rightWidth
+        layoutWindowTitleField.stringValue = value.windowTitle
+        layoutProfileNameField.stringValue = value.profileName
+        layoutProfileStatusField.stringValue = value.profileStatus
+        layoutCompanionTitleField.stringValue = value.companionTitle
+        layoutCompanionStatusField.stringValue = value.companionStatus
+    }
+
+    private func selectedLayoutId() -> String {
+        let index = stylePopup.indexOfSelectedItem
+        return layoutStyles.indices.contains(index) ? layoutStyles[index].id : "stage"
+    }
+
+    private func updateLayoutComponentAvailability() {
+        let enabled = selectedLayoutId() == "qq-classic"
+        layoutAvailabilityLabel.stringValue = enabled
+            ? "这些设置只控制经典蓝布局；颜色、背景和对话头像仍在其他分页编辑。"
+            : "未来舞台使用统一舞台结构，没有经典蓝专属组件。切换到“经典蓝 QQ 工作台”后可编辑。"
+        for view in layoutComponentsStack.arrangedSubviews where view !== layoutAvailabilityLabel {
+            view.alphaValue = enabled ? 1 : 0.42
+            setEnabledRecursively(view, enabled: enabled)
+        }
+    }
+
+    private func setEnabledRecursively(_ view: NSView, enabled: Bool) {
+        if let control = view as? NSControl { control.isEnabled = enabled }
+        view.subviews.forEach { setEnabledRecursively($0, enabled: enabled) }
+    }
+
+    @objc private func layoutSelectionChanged() {
+        updateLayoutComponentAvailability()
+    }
+
+    @objc private func resetLayoutComponents() {
+        draft.layoutComponents = .qqClassic
+        populateLayoutComponents()
     }
 
     private func applyColors(_ colors: ThemeColors) {
@@ -438,6 +649,55 @@ final class ThemeEditorWindowController: NSWindowController {
             }
             updateImagePreview()
         }
+    }
+
+    private func updateAvatarPreviews() {
+        updateAvatarPreview(userAvatarPreview, label: userAvatarPathLabel, url: draft.userAvatarURL, role: "我的提问")
+        updateAvatarPreview(assistantAvatarPreview, label: assistantAvatarPathLabel, url: draft.assistantAvatarURL, role: "Codex 回答")
+    }
+
+    private func updateAvatarPreview(_ preview: NSImageView, label: NSTextField, url: URL?, role: String) {
+        if let url, let image = NSImage(contentsOf: url) {
+            preview.image = image
+            preview.contentTintColor = nil
+            label.stringValue = url.path
+        } else {
+            preview.image = NSImage(systemSymbolName: "person.crop.circle", accessibilityDescription: "\(role)头像未设置")
+            preview.contentTintColor = .tertiaryLabelColor
+            label.stringValue = "未设置"
+        }
+    }
+
+    private func chooseAvatar(for role: String, apply: (URL) -> Void) {
+        let panel = NSOpenPanel()
+        panel.title = "选择\(role)头像"
+        panel.prompt = "选择"
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.image]
+        if panel.runModal() == .OK, let url = panel.url {
+            apply(url)
+            updateAvatarPreviews()
+        }
+    }
+
+    @objc private func chooseUserAvatar() {
+        chooseAvatar(for: "我的提问") { draft.userAvatarURL = $0 }
+    }
+
+    @objc private func chooseAssistantAvatar() {
+        chooseAvatar(for: "Codex 回答") { draft.assistantAvatarURL = $0 }
+    }
+
+    @objc private func removeUserAvatar() {
+        draft.userAvatarURL = nil
+        updateAvatarPreviews()
+    }
+
+    @objc private func removeAssistantAvatar() {
+        draft.assistantAvatarURL = nil
+        updateAvatarPreviews()
     }
 
     @objc private func newTheme() {
@@ -483,7 +743,12 @@ final class ThemeEditorWindowController: NSWindowController {
         draft.name = String(name.prefix(80))
         let backgroundName = backgroundNameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         draft.backgroundName = backgroundName.isEmpty ? "我的背景" : String(backgroundName.prefix(80))
-        draft.visualStyle = stylePopup.indexOfSelectedItem == 1 ? "miku-07" : "portal"
+        let selectedStyleIndex = stylePopup.indexOfSelectedItem
+        let selectedLayout = layoutStyles.indices.contains(selectedStyleIndex)
+            ? layoutStyles[selectedStyleIndex]
+            : layoutStyles[0]
+        draft.layoutId = selectedLayout.id
+        draft.visualStyle = selectedLayout.visualStyle
         draft.brandSubtitle = String(brandSubtitleField.stringValue.prefix(80))
         draft.tagline = String(taglineField.stringValue.prefix(160))
         draft.projectPrefix = String(projectPrefixField.stringValue.prefix(80))
@@ -498,6 +763,24 @@ final class ThemeEditorWindowController: NSWindowController {
         draft.effects = ThemeEffects(
             taskPanelOpacity: opacitySlider.doubleValue / 100,
             taskPanelBlur: blurSlider.doubleValue
+        )
+        let minWidth = min(max(layoutMinWidthField.doubleValue, 1080), 2400)
+        let rightWidth = min(max(layoutRightWidthField.doubleValue, 272), 420)
+        draft.layoutComponents = ThemeLayoutComponents(
+            retroHeader: retroHeaderCheckbox.state == .on,
+            toolbar: toolbarCheckbox.state == .on,
+            threePane: threePaneCheckbox.state == .on,
+            autoOpenSummary: autoSummaryCheckbox.state == .on,
+            companion: companionCheckbox.state == .on,
+            profileCard: profileCheckbox.state == .on,
+            homePet: homePetCheckbox.state == .on,
+            minWidth: minWidth,
+            rightWidth: rightWidth,
+            windowTitle: String(layoutWindowTitleField.stringValue.prefix(60)),
+            profileName: String(layoutProfileNameField.stringValue.prefix(48)),
+            profileStatus: String(layoutProfileStatusField.stringValue.prefix(32)),
+            companionTitle: String(layoutCompanionTitleField.stringValue.prefix(48)),
+            companionStatus: String(layoutCompanionStatusField.stringValue.prefix(64))
         )
         draft.colors = ThemeColors(
             background: colorValue("background"),

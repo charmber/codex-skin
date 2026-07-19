@@ -1,8 +1,12 @@
 import Foundation
+import Darwin
 
 final class EngineController {
     private let fileManager = FileManager.default
     private let workQueue = DispatchQueue(label: "com.charmber.codexdreamskin.engine", qos: .userInitiated)
+    private let processLock = NSLock()
+    private var runningProcessIdentifier: pid_t?
+    private var cancelledProcessIdentifiers = Set<pid_t>()
 
     let installRoot: URL
     let stateRoot: URL
@@ -119,6 +123,7 @@ final class EngineController {
     func runScript(
         _ name: String,
         arguments: [String] = [],
+        timeout: TimeInterval? = 90,
         completion: @escaping (Result<ScriptResult, Error>) -> Void
     ) {
         workQueue.async {
@@ -142,10 +147,61 @@ final class EngineController {
             process.environment = self.processEnvironment()
 
             do {
+                let termination = DispatchSemaphore(value: 0)
+                let outputFinished = DispatchSemaphore(value: 0)
+                let outputLock = NSLock()
+                var outputData = Data()
+                process.terminationHandler = { _ in termination.signal() }
                 try process.run()
-                let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                process.waitUntilExit()
+                let processID = process.processIdentifier
+                _ = setpgid(processID, processID)
+                self.processLock.lock()
+                self.runningProcessIdentifier = processID
+                self.processLock.unlock()
+
+                DispatchQueue.global(qos: .utility).async {
+                    let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                    outputLock.lock()
+                    outputData.append(data)
+                    outputLock.unlock()
+                    outputFinished.signal()
+                }
+
+                let timedOut: Bool
+                if let timeout {
+                    timedOut = termination.wait(timeout: .now() + timeout) == .timedOut
+                } else {
+                    termination.wait()
+                    timedOut = false
+                }
+
+                if timedOut {
+                    self.signalProcessTree(processID, signal: SIGTERM)
+                    if termination.wait(timeout: .now() + 2) == .timedOut {
+                        self.signalProcessTree(processID, signal: SIGKILL)
+                        _ = termination.wait(timeout: .now() + 2)
+                    }
+                }
+
+                if outputFinished.wait(timeout: .now() + 1) == .timedOut {
+                    outputPipe.fileHandleForReading.closeFile()
+                    _ = outputFinished.wait(timeout: .now() + 1)
+                }
+                outputLock.lock()
+                let data = outputData
+                outputLock.unlock()
+                let wasCancelled = self.finishProcess(processID)
                 let output = String(data: data, encoding: .utf8) ?? ""
+                if timedOut {
+                    DispatchQueue.main.async {
+                        completion(.failure(EngineError.scriptTimedOut(name, Int(timeout?.rounded() ?? 0))))
+                    }
+                    return
+                }
+                if wasCancelled {
+                    DispatchQueue.main.async { completion(.failure(EngineError.scriptCancelled(name))) }
+                    return
+                }
                 let result = ScriptResult(exitCode: process.terminationStatus, output: output)
                 DispatchQueue.main.async { completion(.success(result)) }
             } catch {
@@ -154,8 +210,35 @@ final class EngineController {
         }
     }
 
+    func cancelRunningScript() {
+        processLock.lock()
+        let processID = runningProcessIdentifier
+        if let processID { cancelledProcessIdentifiers.insert(processID) }
+        processLock.unlock()
+        guard let processID else { return }
+        signalProcessTree(processID, signal: SIGTERM)
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self else { return }
+            self.processLock.lock()
+            let stillRunning = self.runningProcessIdentifier == processID
+            self.processLock.unlock()
+            if stillRunning { self.signalProcessTree(processID, signal: SIGKILL) }
+        }
+    }
+
+    private func signalProcessTree(_ processID: pid_t, signal: Int32) {
+        if kill(-processID, signal) != 0 { _ = kill(processID, signal) }
+    }
+
+    private func finishProcess(_ processID: pid_t) -> Bool {
+        processLock.lock()
+        defer { processLock.unlock() }
+        if runningProcessIdentifier == processID { runningProcessIdentifier = nil }
+        return cancelledProcessIdentifiers.remove(processID) != nil
+    }
+
     func loadStatus(completion: @escaping (SkinStatus) -> Void) {
-        runScript("status-dream-skin-macos.sh", arguments: ["--json"]) { result in
+        runScript("status-dream-skin-macos.sh", arguments: ["--json"], timeout: 5) { result in
             guard case .success(let scriptResult) = result,
                   scriptResult.succeeded,
                   let data = scriptResult.output.data(using: .utf8),
@@ -169,6 +252,15 @@ final class EngineController {
 
     func palettes() -> [NamedChoice] {
         let root = installRoot.appendingPathComponent("palettes", isDirectory: true)
+        return jsonChoices(in: root, fallbackToFilename: true)
+    }
+
+    func palettes(for layoutId: String) -> [NamedChoice] {
+        palettes().filter { ($0.layoutId ?? "stage") == layoutId }
+    }
+
+    func layouts() -> [NamedChoice] {
+        let root = installRoot.appendingPathComponent("layouts", isDirectory: true)
         return jsonChoices(in: root, fallbackToFilename: true)
     }
 
@@ -194,21 +286,29 @@ final class EngineController {
             .appendingPathComponent("theme", isDirectory: true)
             .appendingPathComponent("theme.json")
         let bundledTheme = installRoot
-            .appendingPathComponent("assets", isDirectory: true)
+            .appendingPathComponent("themes", isDirectory: true)
+            .appendingPathComponent("builtin-miku-aqua", isDirectory: true)
             .appendingPathComponent("theme.json")
         let themeURL = fileManager.fileExists(atPath: userTheme.path) ? userTheme : bundledTheme
 
         do {
             let data = try Data(contentsOf: themeURL)
             let theme = try JSONDecoder().decode(ThemeFile.self, from: data)
-            let imageURL = theme.image.map {
-                themeURL.deletingLastPathComponent().appendingPathComponent($0)
-            }.flatMap { fileManager.fileExists(atPath: $0.path) ? $0 : nil }
+            let assetURL: (String?) -> URL? = { name in
+                guard let name, !name.isEmpty, URL(fileURLWithPath: name).lastPathComponent == name else {
+                    return nil
+                }
+                let candidate = themeURL.deletingLastPathComponent().appendingPathComponent(name)
+                return self.fileManager.fileExists(atPath: candidate.path) ? candidate : nil
+            }
+            let imageURL = assetURL(theme.image)
             let defaults = ThemeDraft.blank
             return ThemeDraft(
                 name: theme.name ?? defaults.name,
                 backgroundName: theme.backgroundName ?? theme.image ?? defaults.backgroundName,
                 visualStyle: theme.visualStyle ?? defaults.visualStyle,
+                layoutId: theme.layoutId ?? (theme.visualStyle == "classic-blue-07" ? "qq-classic" : defaults.layoutId),
+                layoutComponents: theme.layoutComponents ?? defaults.layoutComponents,
                 brandSubtitle: theme.brandSubtitle ?? defaults.brandSubtitle,
                 tagline: theme.tagline ?? defaults.tagline,
                 projectPrefix: theme.projectPrefix ?? defaults.projectPrefix,
@@ -216,6 +316,8 @@ final class EngineController {
                 statusText: theme.statusText ?? defaults.statusText,
                 quote: theme.quote ?? defaults.quote,
                 imageURL: imageURL,
+                userAvatarURL: assetURL(theme.avatars?.user),
+                assistantAvatarURL: assetURL(theme.avatars?.assistant),
                 colors: theme.colors ?? defaults.colors,
                 effects: theme.effects ?? defaults.effects,
                 headerText: theme.headerText ?? defaults.headerText
@@ -240,6 +342,7 @@ final class EngineController {
             "--name", draft.name,
             "--background-name", draft.backgroundName,
             "--visual-style", draft.visualStyle,
+            "--layout-id", draft.layoutId,
             "--brand-subtitle", draft.brandSubtitle,
             "--tagline", draft.tagline,
             "--project-prefix", draft.projectPrefix,
@@ -261,8 +364,32 @@ final class EngineController {
             "--header-title", draft.headerText.title ?? "",
             "--header-subtitle", draft.headerText.subtitle ?? "",
             "--header-status", draft.headerText.status ?? "",
+            "--component-retro-header", String(draft.layoutComponents.retroHeader),
+            "--component-toolbar", String(draft.layoutComponents.toolbar),
+            "--component-three-pane", String(draft.layoutComponents.threePane),
+            "--component-auto-open-summary", String(draft.layoutComponents.autoOpenSummary),
+            "--component-companion", String(draft.layoutComponents.companion),
+            "--component-profile-card", String(draft.layoutComponents.profileCard),
+            "--component-home-pet", String(draft.layoutComponents.homePet),
+            "--layout-min-width", String(draft.layoutComponents.minWidth),
+            "--layout-right-width", String(draft.layoutComponents.rightWidth),
+            "--layout-window-title", draft.layoutComponents.windowTitle,
+            "--layout-profile-name", draft.layoutComponents.profileName,
+            "--layout-profile-status", draft.layoutComponents.profileStatus,
+            "--layout-companion-title", draft.layoutComponents.companionTitle,
+            "--layout-companion-status", draft.layoutComponents.companionStatus,
             "--save-theme"
         ]
+        if let userAvatarURL = draft.userAvatarURL {
+            arguments.append(contentsOf: ["--user-avatar", userAvatarURL.path])
+        } else {
+            arguments.append("--clear-user-avatar")
+        }
+        if let assistantAvatarURL = draft.assistantAvatarURL {
+            arguments.append(contentsOf: ["--assistant-avatar", assistantAvatarURL.path])
+        } else {
+            arguments.append("--clear-assistant-avatar")
+        }
         if !applyImmediately { arguments.append("--no-apply") }
         runScript("customize-theme-macos.sh", arguments: arguments, completion: completion)
     }
@@ -298,7 +425,8 @@ final class EngineController {
                 : (value["id"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? fallbackID
             let name = (value["name"] as? String).flatMap { $0.isEmpty ? nil : $0 }
                 ?? (fallbackToFilename ? fallbackID : id)
-            return NamedChoice(id: id, name: name)
+            let layoutId = (value["layoutId"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            return NamedChoice(id: id, name: name, layoutId: layoutId)
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 

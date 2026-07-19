@@ -29,6 +29,8 @@ THEME_NAME=""
 PALETTE_ID=""
 PALETTE_NAME=""
 BACKGROUND_NAME=""
+LAYOUT_ID="stage"
+LAYOUT_NAME="未来舞台"
 PANEL_OPACITY="0.76"
 PANEL_BLUR="14"
 CODEX_RUNNING="false"
@@ -84,6 +86,12 @@ if [ -f "$THEME_DIR/theme.json" ]; then
   PALETTE_ID="$(read_json_field "$THEME_DIR/theme.json" paletteId)"
   PALETTE_NAME="$(read_json_field "$THEME_DIR/theme.json" paletteName)"
   BACKGROUND_NAME="$(read_json_field "$THEME_DIR/theme.json" backgroundName)"
+  LAYOUT_ID="$(read_json_field "$THEME_DIR/theme.json" layoutId)"
+  if [ -z "$LAYOUT_ID" ]; then
+    visual_style="$(read_json_field "$THEME_DIR/theme.json" visualStyle)"
+    [ "$visual_style" = "classic-blue-07" ] && LAYOUT_ID="qq-classic" || LAYOUT_ID="stage"
+  fi
+  [ "$LAYOUT_ID" = "qq-classic" ] && LAYOUT_NAME="经典蓝 QQ 工作台" || LAYOUT_NAME="未来舞台"
   [ -n "$PALETTE_NAME" ] || PALETTE_NAME="$THEME_NAME"
   [ -n "$BACKGROUND_NAME" ] || BACKGROUND_NAME="$(read_json_field "$THEME_DIR/theme.json" image)"
   saved_opacity="$(read_json_field "$THEME_DIR/theme.json" effects.taskPanelOpacity)"
@@ -121,7 +129,7 @@ if [ "$SHORT" = "true" ]; then
 fi
 
 if [ "$JSON" = "true" ]; then
-  /usr/bin/python3 - "$SESSION" "$PORT" "$INJECTOR_ALIVE" "$CDP_OK" "$CODEX_RUNNING" "$THEME_NAME" "$PALETTE_ID" "$PALETTE_NAME" "$BACKGROUND_NAME" "$PANEL_PERCENT" "$PANEL_BLUR" <<'PY'
+  /usr/bin/python3 - "$SESSION" "$PORT" "$INJECTOR_ALIVE" "$CDP_OK" "$CODEX_RUNNING" "$THEME_NAME" "$PALETTE_ID" "$PALETTE_NAME" "$BACKGROUND_NAME" "$LAYOUT_ID" "$LAYOUT_NAME" "$PANEL_PERCENT" "$PANEL_BLUR" <<'PY'
 import json, sys
 print(json.dumps({
     "session": sys.argv[1],
@@ -133,8 +141,10 @@ print(json.dumps({
     "paletteId": sys.argv[7] or "",
     "paletteName": sys.argv[8] or "",
     "backgroundName": sys.argv[9] or "",
-    "taskPanelOpacityPercent": float(sys.argv[10]) if sys.argv[10] else 76,
-    "taskPanelBlur": float(sys.argv[11]) if sys.argv[11] else 14,
+    "layoutId": sys.argv[10] or "stage",
+    "layoutName": sys.argv[11] or "未来舞台",
+    "taskPanelOpacityPercent": float(sys.argv[12]) if sys.argv[12] else 76,
+    "taskPanelBlur": float(sys.argv[13]) if sys.argv[13] else 14,
 }))
 PY
   exit 0
@@ -149,5 +159,7 @@ printf 'theme=%s\n' "${THEME_NAME:-}"
 printf 'palette_id=%s\n' "${PALETTE_ID:-}"
 printf 'palette=%s\n' "${PALETTE_NAME:-}"
 printf 'background=%s\n' "${BACKGROUND_NAME:-}"
+printf 'layout_id=%s\n' "${LAYOUT_ID:-stage}"
+printf 'layout=%s\n' "${LAYOUT_NAME:-未来舞台}"
 printf 'panel_opacity=%s\n' "${PANEL_PERCENT:-76}"
 printf 'panel_blur=%s\n' "${PANEL_BLUR:-14}"

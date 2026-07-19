@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/charmber/codex-skin/macos/schemas/theme.schema.json",
+  "title": "Codex Dream Skin Theme",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "id", "name", "paletteId", "paletteName", "backgroundName",
+    "layoutId", "visualStyle", "image", "effects", "colors"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "paletteId": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "paletteName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "backgroundName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "layoutId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "visualStyle": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "brandSubtitle": { "type": "string", "maxLength": 80 },
+    "tagline": { "type": "string", "maxLength": 160 },
+    "projectPrefix": { "type": "string", "maxLength": 80 },
+    "projectLabel": { "type": "string", "maxLength": 80 },
+    "statusText": { "type": "string", "maxLength": 80 },
+    "quote": { "type": "string", "maxLength": 80 },
+    "image": { "$ref": "#/$defs/imageName" },
+    "avatars": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "user": { "oneOf": [{ "$ref": "#/$defs/imageName" }, { "type": "null" }] },
+        "assistant": { "oneOf": [{ "$ref": "#/$defs/imageName" }, { "type": "null" }] }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskPanelOpacity", "taskPanelBlur"],
+      "properties": {
+        "taskPanelOpacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "taskPanelBlur": { "type": "number", "minimum": 0, "maximum": 40 }
+      }
+    },
+    "headerText": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/optionalText" },
+        "subtitle": { "$ref": "#/$defs/optionalText" },
+        "status": { "$ref": "#/$defs/optionalText" }
+      }
+    },
+    "layoutComponents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retroHeader": { "type": "boolean" },
+        "toolbar": { "type": "boolean" },
+        "threePane": { "type": "boolean" },
+        "autoOpenSummary": { "type": "boolean" },
+        "companion": { "type": "boolean" },
+        "profileCard": { "type": "boolean" },
+        "homePet": { "type": "boolean" },
+        "minWidth": { "type": "number", "minimum": 1080, "maximum": 2400 },
+        "rightWidth": { "type": "number", "minimum": 272, "maximum": 420 },
+        "windowTitle": { "type": "string", "maxLength": 60 },
+        "profileName": { "type": "string", "maxLength": 48 },
+        "profileStatus": { "type": "string", "maxLength": 32 },
+        "companionTitle": { "type": "string", "maxLength": 48 },
+        "companionStatus": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background", "panel", "panelAlt", "accent", "accentAlt", "secondary",
+        "highlight", "text", "muted", "line"
+      ],
+      "properties": {
+        "background": { "$ref": "#/$defs/color" },
+        "panel": { "$ref": "#/$defs/color" },
+        "panelAlt": { "$ref": "#/$defs/color" },
+        "accent": { "$ref": "#/$defs/color" },
+        "accentAlt": { "$ref": "#/$defs/color" },
+        "secondary": { "$ref": "#/$defs/color" },
+        "highlight": { "$ref": "#/$defs/color" },
+        "text": { "$ref": "#/$defs/color" },
+        "muted": { "$ref": "#/$defs/color" },
+        "line": { "$ref": "#/$defs/color" }
+      }
+    }
+  },
+  "$defs": {
+    "imageName": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+\\.(?:png|jpg|jpeg|webp)$"
+    },
+    "optionalText": {
+      "oneOf": [
+        { "type": "string", "maxLength": 80 },
+        { "type": "null" }
+      ]
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^(?:#[0-9A-Fa-f]{6}|rgba?\\([0-9., %]+\\))$"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/charmber/codex-skin/macos/schemas/theme-package-manifest.schema.json",
+  "title": "Codex Dream Skin Theme Package Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "formatVersion", "id", "name", "version", "renderer", "theme"],
+  "properties": {
+    "format": { "const": "codex-dream-skin-theme" },
+    "formatVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "author": { "type": "string", "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 240 },
+    "license": { "type": "string", "maxLength": 80 },
+    "homepage": { "type": "string", "maxLength": 300 },
+    "renderer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apiVersion", "minEngineVersion", "layoutId"],
+      "properties": {
+        "apiVersion": { "const": 1 },
+        "minEngineVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$"
+        },
+        "layoutId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        }
+      }
+    },
+    "theme": { "const": "theme.json" },
+    "preview": { "$ref": "#/$defs/imageName" }
+  },
+  "$defs": {
+    "imageName": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+\\.(?:png|jpg|jpeg|webp)$"
+    }
+  }
+}

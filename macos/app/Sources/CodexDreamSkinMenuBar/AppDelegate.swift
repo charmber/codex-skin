@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import UniformTypeIdentifiers
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let engine = EngineController()
@@ -8,10 +9,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var refreshTimer: Timer?
     private var status = SkinStatus.empty
     private var isBusy = true
+    private var busyMessage = "正在准备主题引擎..."
+    private var busyToken: UUID?
+    private var busyWatchdog: DispatchWorkItem?
+    private var busyIsDeployment = true
     private var deploymentError: Error?
     private var themeEditor: ThemeEditorWindowController?
     private let shouldOpenThemeEditor = CommandLine.arguments.contains("--open-theme-editor") ||
         ProcessInfo.processInfo.environment["CODEX_DREAM_SKIN_OPEN_EDITOR"] == "1"
+    private var themeStoreURL: URL {
+        let productionURL = URL(string: "https://skin.beanplay.cn")!
+        guard let configured = ProcessInfo.processInfo.environment["CODEX_DREAM_SKIN_STORE_URL"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !configured.isEmpty,
+              let candidate = URL(string: configured),
+              let scheme = candidate.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              candidate.host != nil else {
+            return productionURL
+        }
+        return candidate
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureStatusItem()
@@ -19,9 +37,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         rebuildMenu()
 
+        let deploymentToken = beginBusy(message: "正在准备主题引擎...", timeout: 45, isDeployment: true)
         engine.deployBundledEngine { [weak self] result in
             guard let self else { return }
-            self.isBusy = false
+            guard self.finishBusy(deploymentToken) else { return }
             if case .failure(let error) = result {
                 self.deploymentError = error
                 self.rebuildMenu()
@@ -81,7 +100,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
 
         if isBusy {
-            menu.addItem(infoItem("正在准备主题引擎..."))
+            menu.addItem(infoItem(busyMessage))
+            if !busyIsDeployment {
+                let cancel = NSMenuItem(title: "取消当前操作", action: #selector(cancelCurrentOperation), keyEquivalent: "")
+                cancel.target = self
+                cancel.isEnabled = true
+                menu.addItem(cancel)
+            }
             return
         }
 
@@ -96,6 +121,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(infoItem(sessionSummary))
+        menu.addItem(infoItem("布局：\(status.layoutName)"))
         if !status.paletteName.isEmpty {
             menu.addItem(infoItem("配色：\(status.paletteName)"))
         }
@@ -112,6 +138,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(actionItem("应用皮肤...", action: #selector(applySkin)))
             menu.addItem(actionItem("暂停皮肤", action: #selector(pauseSkin)))
             menu.addItem(actionItem("打开主题工作室...", action: #selector(openThemeEditor)))
+            menu.addItem(actionItem("打开主题商店...", action: #selector(openThemeStore)))
+            menu.addItem(actionItem("导入主题包...", action: #selector(importThemePackage)))
+            menu.addItem(actionItem("导出当前主题...", action: #selector(exportThemePackage)))
             menu.addItem(actionItem("快速换背景图...", action: #selector(customizeTheme)))
             menu.addItem(actionItem(
                 "阅读区：\(format(status.taskPanelOpacityPercent))% / \(format(status.taskPanelBlur))px",
@@ -150,15 +179,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func addChoiceMenus() {
-        let palettes = NSMenu(title: "配色主题")
-        for choice in engine.palettes() {
+        let layouts = NSMenu(title: "布局主题")
+        for choice in engine.layouts() {
+            let item = actionItem(choice.name, action: #selector(selectLayout))
+            item.representedObject = choice.id
+            item.state = choice.id == status.layoutId ? .on : .off
+            layouts.addItem(item)
+        }
+        if layouts.items.isEmpty { layouts.addItem(infoItem("没有可用布局")) }
+        let layoutParent = NSMenuItem(title: "布局主题", action: nil, keyEquivalent: "")
+        layoutParent.submenu = layouts
+        menu.addItem(layoutParent)
+
+        let palettes = NSMenu(title: "配色方案")
+        for choice in engine.palettes(for: status.layoutId) {
             let item = actionItem(choice.name, action: #selector(selectPalette))
             item.representedObject = choice.id
             item.state = choice.id == status.paletteId ? .on : .off
             palettes.addItem(item)
         }
         if palettes.items.isEmpty { palettes.addItem(infoItem("没有可用配色")) }
-        let paletteParent = NSMenuItem(title: "配色主题", action: nil, keyEquivalent: "")
+        let paletteParent = NSMenuItem(title: "配色方案", action: nil, keyEquivalent: "")
         paletteParent.submenu = palettes
         menu.addItem(paletteParent)
 
@@ -209,12 +250,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func retryDeployment() {
-        isBusy = true
         deploymentError = nil
-        rebuildMenu()
+        let token = beginBusy(message: "正在重新部署主题引擎...", timeout: 45, isDeployment: true)
         engine.deployBundledEngine(force: true) { [weak self] result in
             guard let self else { return }
-            self.isBusy = false
+            guard self.finishBusy(token) else { return }
             if case .failure(let error) = result { self.deploymentError = error }
             self.refreshStatus()
             self.rebuildMenu()
@@ -239,7 +279,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func customizeTheme() {
-        runAction(title: "正在打开图片选择器...", script: "customize-theme-macos.sh")
+        runAction(title: "正在打开图片选择器...", script: "customize-theme-macos.sh", timeout: nil)
     }
 
     @objc private func openThemeEditor() {
@@ -252,17 +292,79 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         themeEditor?.present()
     }
 
+    @objc private func openThemeStore() {
+        menu.cancelTracking()
+        guard NSWorkspace.shared.open(themeStoreURL) else {
+            showError(title: "无法打开主题商店", detail: themeStoreURL.absoluteString)
+            return
+        }
+    }
+
+    @objc private func importThemePackage() {
+        menu.cancelTracking()
+        let panel = NSOpenPanel()
+        panel.title = "导入 Codex Dream Skin 主题包"
+        panel.message = "选择 .cds-theme.zip 主题包。导入前会校验格式、素材和渲染器兼容性。"
+        panel.prompt = "导入并应用"
+        panel.allowedContentTypes = [.zip]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        runAction(
+            title: "正在校验并导入主题包...",
+            script: "import-theme-package-macos.sh",
+            arguments: ["--file", url.path],
+            successMessage: "主题包已加入主题库并应用。"
+        )
+    }
+
+    @objc private func exportThemePackage() {
+        menu.cancelTracking()
+        let panel = NSSavePanel()
+        panel.title = "导出当前 Codex Dream Skin 主题"
+        panel.message = "导出的 ZIP 包含完整主题配置和图片素材，不包含渲染器代码。"
+        panel.prompt = "导出"
+        panel.allowedContentTypes = [.zip]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = suggestedThemePackageFilename
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        runAction(
+            title: "正在导出主题包...",
+            script: "export-theme-package-macos.sh",
+            arguments: ["--output", url.path],
+            timeout: 45,
+            successMessage: "主题包已导出到：\n\(url.path)"
+        )
+    }
+
+    private var suggestedThemePackageFilename: String {
+        let source = status.themeName.isEmpty ? "Codex-Dream-Skin-Theme" : status.themeName
+        let sanitized = source
+            .components(separatedBy: CharacterSet(charactersIn: "/:"))
+            .joined(separator: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let base = sanitized.isEmpty ? "Codex-Dream-Skin-Theme" : sanitized
+        return "\(base).cds-theme.zip"
+    }
+
     @objc private func configureReadingPanel() {
-        runAction(title: "正在打开阅读区设置...", script: "configure-reading-panel-macos.sh")
+        runAction(title: "正在打开阅读区设置...", script: "configure-reading-panel-macos.sh", timeout: nil)
     }
 
     @objc private func customizeHeaderText() {
-        runAction(title: "正在打开文字设置...", script: "customize-header-text-macos.sh")
+        runAction(title: "正在打开文字设置...", script: "customize-header-text-macos.sh", timeout: nil)
     }
 
     @objc private func selectPalette(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         runAction(title: "正在切换配色...", script: "switch-palette-macos.sh", arguments: ["--id", id])
+    }
+
+    @objc private func selectLayout(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        runAction(title: "正在切换布局...", script: "switch-layout-macos.sh", arguments: ["--id", id])
     }
 
     @objc private func selectBackground(_ sender: NSMenuItem) {
@@ -299,17 +401,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         title: String,
         script: String,
         arguments: [String] = [],
+        timeout: TimeInterval? = 120,
         successMessage: String? = nil
     ) {
         guard !isBusy else { return }
-        isBusy = true
         menu.cancelTracking()
-        statusItem.button?.title = "Skin ..."
-        rebuildMenu()
+        let token = beginBusy(message: title, timeout: timeout.map { $0 + 7 }, isDeployment: false)
 
-        engine.runScript(script, arguments: arguments) { [weak self] result in
+        engine.runScript(script, arguments: arguments, timeout: timeout) { [weak self] result in
             guard let self else { return }
-            self.isBusy = false
+            guard self.finishBusy(token) else { return }
             switch result {
             case .success(let scriptResult) where scriptResult.succeeded:
                 if let successMessage { self.showInformation(title: title, detail: successMessage) }
@@ -321,6 +422,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
             self.refreshStatus()
         }
+    }
+
+    @discardableResult
+    private func beginBusy(message: String, timeout: TimeInterval?, isDeployment: Bool) -> UUID {
+        busyWatchdog?.cancel()
+        let token = UUID()
+        busyToken = token
+        busyMessage = message
+        busyIsDeployment = isDeployment
+        isBusy = true
+        statusItem.button?.title = "Skin ..."
+        statusItem.button?.toolTip = message
+        if let timeout {
+            let watchdog = DispatchWorkItem { [weak self] in
+                guard let self, self.busyToken == token else { return }
+                self.engine.cancelRunningScript()
+                self.busyToken = nil
+                self.busyWatchdog = nil
+                self.isBusy = false
+                self.busyMessage = ""
+                if isDeployment {
+                    self.deploymentError = EngineError.deploymentFailed("准备过程超过 \(Int(timeout)) 秒，已恢复菜单。")
+                }
+                self.updateStatusItem()
+                self.rebuildMenu()
+                if !isDeployment {
+                    self.showError(title: "操作超时", detail: "\(message)超过 \(Int(timeout)) 秒，相关子进程已停止，菜单已恢复。")
+                }
+            }
+            busyWatchdog = watchdog
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: watchdog)
+        }
+        rebuildMenu()
+        return token
+    }
+
+    private func finishBusy(_ token: UUID) -> Bool {
+        guard busyToken == token else { return false }
+        busyWatchdog?.cancel()
+        busyWatchdog = nil
+        busyToken = nil
+        busyMessage = ""
+        isBusy = false
+        return true
+    }
+
+    @objc private func cancelCurrentOperation() {
+        guard busyToken != nil, !busyIsDeployment else { return }
+        busyWatchdog?.cancel()
+        busyWatchdog = nil
+        busyToken = nil
+        busyMessage = ""
+        isBusy = false
+        engine.cancelRunningScript()
+        updateStatusItem()
+        rebuildMenu()
+        refreshStatus()
     }
 
     private func trimmedOutput(_ output: String, fallback: String) -> String {

@@ -28,6 +28,10 @@ TASK_PANEL_BLUR=""
 HEADER_TITLE=""
 HEADER_SUBTITLE=""
 HEADER_STATUS=""
+USER_AVATAR=""
+ASSISTANT_AVATAR=""
+CLEAR_USER_AVATAR="false"
+CLEAR_ASSISTANT_AVATAR="false"
 APPLY_NOW="true"
 RESET_DEMO="false"
 SAVE_THEME="false"
@@ -40,6 +44,8 @@ HAS_QUOTE="false"
 HAS_HEADER_TITLE="false"
 HAS_HEADER_SUBTITLE="false"
 HAS_HEADER_STATUS="false"
+LAYOUT_ARGS=()
+HAS_LAYOUT_ARGS="false"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -47,6 +53,12 @@ while [ "$#" -gt 0 ]; do
     --name) THEME_NAME="${2:-}"; shift 2 ;;
     --background-name) BACKGROUND_NAME="${2:-}"; shift 2 ;;
     --visual-style) VISUAL_STYLE="${2:-}"; shift 2 ;;
+    --layout-id|--component-retro-header|--component-toolbar|--component-three-pane|--component-auto-open-summary|--component-companion|--component-profile-card|--component-home-pet|--layout-min-width|--layout-right-width|--layout-window-title|--layout-profile-name|--layout-profile-status|--layout-companion-title|--layout-companion-status)
+      [ "$#" -ge 2 ] || fail "Missing value for $1"
+      LAYOUT_ARGS+=("$1" "$2")
+      HAS_LAYOUT_ARGS="true"
+      shift 2
+      ;;
     --brand-subtitle) BRAND_SUBTITLE="${2:-}"; HAS_BRAND_SUBTITLE="true"; shift 2 ;;
     --tagline) TAGLINE="${2:-}"; HAS_TAGLINE="true"; shift 2 ;;
     --project-prefix) PROJECT_PREFIX="${2:-}"; HAS_PROJECT_PREFIX="true"; shift 2 ;;
@@ -68,6 +80,10 @@ while [ "$#" -gt 0 ]; do
     --header-title) HEADER_TITLE="${2:-}"; HAS_HEADER_TITLE="true"; shift 2 ;;
     --header-subtitle) HEADER_SUBTITLE="${2:-}"; HAS_HEADER_SUBTITLE="true"; shift 2 ;;
     --header-status) HEADER_STATUS="${2:-}"; HAS_HEADER_STATUS="true"; shift 2 ;;
+    --user-avatar) USER_AVATAR="${2:-}"; shift 2 ;;
+    --assistant-avatar) ASSISTANT_AVATAR="${2:-}"; shift 2 ;;
+    --clear-user-avatar) CLEAR_USER_AVATAR="true"; shift ;;
+    --clear-assistant-avatar) CLEAR_ASSISTANT_AVATAR="true"; shift ;;
     --save-theme) SAVE_THEME="true"; shift ;;
     --no-apply) APPLY_NOW="false"; shift ;;
     --reset-demo) RESET_DEMO="true"; shift ;;
@@ -100,8 +116,10 @@ else
   /bin/chmod 700 "$THEME_DIR"
   image_name="background-$(/bin/date '+%Y%m%d-%H%M%S')-$$.jpg"
   temporary="$THEME_DIR/.${image_name}.tmp.jpg"
+  user_avatar_temporary="$THEME_DIR/.avatar-user.tmp.jpg"
+  assistant_avatar_temporary="$THEME_DIR/.avatar-assistant.tmp.jpg"
   prepared="$THEME_DIR/$image_name"
-  cleanup_temporary() { /bin/rm -f "$temporary"; }
+  cleanup_temporary() { /bin/rm -f "$temporary" "$user_avatar_temporary" "$assistant_avatar_temporary"; }
   trap cleanup_temporary EXIT
   /usr/bin/sips -s format jpeg -s formatOptions 84 -Z 3200 "$IMAGE" --out "$temporary" >/dev/null \
     || fail "macOS could not convert the selected image. Use PNG, JPEG, HEIC, TIFF, or WebP."
@@ -111,10 +129,48 @@ else
   /bin/mv -f "$temporary" "$prepared"
   /bin/chmod 600 "$prepared"
 
+  prepare_avatar() {
+    local source="$1"
+    local filename="$2"
+    local target="$THEME_DIR/$filename"
+    local avatar_temporary="$THEME_DIR/.${filename%.jpg}.tmp.jpg"
+    local source_bytes source_path target_path prepared_bytes
+    [ -f "$source" ] || fail "Selected avatar does not exist: $source"
+    source_bytes="$(/usr/bin/stat -f '%z' "$source")"
+    [ "$source_bytes" -le 20971520 ] || fail "Selected avatar is larger than 20 MB. Choose a smaller file."
+    source_path="$(cd "$(dirname "$source")" && pwd -P)/$(/usr/bin/basename "$source")"
+    target_path="$(cd "$THEME_DIR" && pwd -P)/$filename"
+    if [ "$source_path" != "$target_path" ]; then
+      /usr/bin/sips -s format jpeg -s formatOptions 88 -Z 512 "$source" --out "$avatar_temporary" >/dev/null \
+        || fail "macOS could not convert the selected avatar. Use PNG, JPEG, HEIC, TIFF, or WebP."
+      [ -s "$avatar_temporary" ] || fail "The converted avatar is empty."
+      prepared_bytes="$(/usr/bin/stat -f '%z' "$avatar_temporary")"
+      [ "$prepared_bytes" -le 4194304 ] || fail "The prepared avatar is larger than 4 MB. Choose a simpler image."
+      /bin/mv -f "$avatar_temporary" "$target"
+    fi
+    /bin/chmod 600 "$target"
+  }
+
+  user_avatar_name=""
+  assistant_avatar_name=""
+  if [ "$CLEAR_USER_AVATAR" = "true" ]; then
+    /bin/rm -f "$THEME_DIR/avatar-user.jpg"
+  elif [ -n "$USER_AVATAR" ]; then
+    user_avatar_name="avatar-user.jpg"
+    prepare_avatar "$USER_AVATAR" "$user_avatar_name"
+  fi
+  if [ "$CLEAR_ASSISTANT_AVATAR" = "true" ]; then
+    /bin/rm -f "$THEME_DIR/avatar-assistant.jpg"
+  elif [ -n "$ASSISTANT_AVATAR" ]; then
+    assistant_avatar_name="avatar-assistant.jpg"
+    prepare_avatar "$ASSISTANT_AVATAR" "$assistant_avatar_name"
+  fi
+
   theme_args=(custom --output-dir "$THEME_DIR" --image "$image_name" --name "$THEME_NAME" \
     --palette-name "$THEME_NAME" --palette-id custom --background-name "$BACKGROUND_NAME")
   if [ -f "$THEME_DIR/theme.json" ]; then theme_args+=(--inherit-theme "$THEME_DIR/theme.json"); fi
   [ -n "$VISUAL_STYLE" ] && theme_args+=(--visual-style "$VISUAL_STYLE")
+  [ "$HAS_LAYOUT_ARGS" = "true" ] && theme_args+=("${LAYOUT_ARGS[@]}")
   [ "$HAS_BRAND_SUBTITLE" = "true" ] && theme_args+=(--brand-subtitle "$BRAND_SUBTITLE")
   [ "$HAS_TAGLINE" = "true" ] && theme_args+=(--tagline "$TAGLINE")
   [ "$HAS_PROJECT_PREFIX" = "true" ] && theme_args+=(--project-prefix "$PROJECT_PREFIX")
@@ -136,6 +192,10 @@ else
   [ "$HAS_HEADER_TITLE" = "true" ] && theme_args+=(--header-title "$HEADER_TITLE")
   [ "$HAS_HEADER_SUBTITLE" = "true" ] && theme_args+=(--header-subtitle "$HEADER_SUBTITLE")
   [ "$HAS_HEADER_STATUS" = "true" ] && theme_args+=(--header-status "$HEADER_STATUS")
+  [ -n "$user_avatar_name" ] && theme_args+=(--user-avatar "$user_avatar_name")
+  [ -n "$assistant_avatar_name" ] && theme_args+=(--assistant-avatar "$assistant_avatar_name")
+  [ "$CLEAR_USER_AVATAR" = "true" ] && theme_args+=(--clear-user-avatar)
+  [ "$CLEAR_ASSISTANT_AVATAR" = "true" ] && theme_args+=(--clear-assistant-avatar)
   "$NODE" "$SCRIPT_DIR/write-theme.mjs" "${theme_args[@]}"
 
   if [ "$SAVE_THEME" = "true" ]; then
@@ -144,7 +204,10 @@ else
     theme_id="user-$(/bin/date '+%Y%m%d%H%M%S')-$$"
     library_dir="$THEMES_ROOT/$theme_id"
     /bin/mkdir -p "$library_dir" "$IMAGES_ROOT"
-    /bin/cp -f "$THEME_DIR/$image_name" "$THEME_DIR/theme.json" "$library_dir/"
+    /bin/cp -f "$THEME_DIR/$image_name" "$THEME_DIR/theme.json" "$THEME_DIR/manifest.json" "$library_dir/"
+    for avatar_file in avatar-user.jpg avatar-assistant.jpg; do
+      [ -f "$THEME_DIR/$avatar_file" ] && /bin/cp -f "$THEME_DIR/$avatar_file" "$library_dir/"
+    done
     /bin/chmod 600 "$library_dir/"*
 
     source_base="$(/usr/bin/basename "$IMAGE")"

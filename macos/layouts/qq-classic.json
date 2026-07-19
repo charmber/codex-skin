@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "qq-classic",
+  "name": "经典蓝 QQ 工作台",
+  "defaultPaletteId": "classic-blue",
+  "editableSections": ["colors", "copy", "avatars", "effects", "layoutComponents"]
+}

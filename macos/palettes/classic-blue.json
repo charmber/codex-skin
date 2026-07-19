@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-blue",
+  "name": "经典蓝默认方案",
+  "layoutId": "qq-classic",
+  "visualStyle": "classic-blue-07",
+  "brandSubtitle": "CLASSIC BLUE 07",
+  "tagline": "把清晰、直接、可靠的桌面体验带回 Codex。",
+  "projectPrefix": "项目 · ",
+  "projectLabel": "▰  选择项目",
+  "statusText": "本机主题已连接",
+  "quote": "CODEX ASSISTANT ONLINE",
+  "colors": {
+    "background": "#dceefb",
+    "panel": "#f7fcff",
+    "panelAlt": "#eaf5fd",
+    "accent": "#2674c7",
+    "accentAlt": "#3a8ee0",
+    "secondary": "#60a8e9",
+    "highlight": "#d98619",
+    "text": "#14243a",
+    "muted": "#61768d",
+    "line": "rgba(54, 112, 161, 0.42)"
+  }
+}

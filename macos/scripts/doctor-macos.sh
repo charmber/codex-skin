@@ -15,9 +15,11 @@ discover_codex_app
 require_macos_runtime
 [ -f "$CONFIG_PATH" ] || fail "Codex config not found: $CONFIG_PATH"
 for required in \
-  "$PROJECT_ROOT/assets/dream-skin.css" \
-  "$PROJECT_ROOT/assets/renderer-inject.js" \
-  "$PROJECT_ROOT/assets/theme.json" \
+  "$PROJECT_ROOT/renderer/manifest.json" \
+  "$PROJECT_ROOT/renderer/layouts/stage/dream-skin.css" \
+  "$PROJECT_ROOT/renderer/layouts/stage/renderer-inject.js" \
+  "$PROJECT_ROOT/themes/builtin-miku-aqua/manifest.json" \
+  "$PROJECT_ROOT/themes/builtin-miku-aqua/theme.json" \
   "$PROJECT_ROOT/scripts/injector.mjs"; do
   [ -s "$required" ] || fail "Required project file is missing or empty: $required"
 done
@@ -29,7 +31,7 @@ if [ -f "$STATE_PATH" ]; then
 fi
 LIVE="false"
 if [ -f "$STATE_PATH" ] && verified_cdp_endpoint "$PORT"; then
-  "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/dev/null
+  run_with_deadline 20 "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/dev/null
   LIVE="true"
 fi
 [ "$REQUIRE_LIVE" = "false" ] || [ "$LIVE" = "true" ] || fail "No verified live Dream Skin session is active."

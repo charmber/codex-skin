@@ -1,0 +1,17 @@
+{
+  "format": "codex-dream-skin-theme",
+  "formatVersion": 1,
+  "id": "miku-aqua-stage",
+  "name": "初音未来 · 未来青",
+  "version": "1.0.0",
+  "author": "Codex Dream Skin",
+  "description": "内置未来青舞台主题",
+  "license": "MIT",
+  "renderer": {
+    "apiVersion": 1,
+    "minEngineVersion": "1.10.0",
+    "layoutId": "stage"
+  },
+  "theme": "theme.json",
+  "preview": "background.png"
+}

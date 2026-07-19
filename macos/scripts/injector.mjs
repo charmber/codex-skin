@@ -1,13 +1,22 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import {
+  MAX_AVATAR_BYTES,
+  MAX_THEME_BYTES,
+  loadRendererManifest,
+  normalizeTheme,
+  validateThemePackageManifest,
+} from "./theme-contract.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const SKIN_VERSION = (await fs.readFile(path.join(root, "VERSION"), "utf8")).trim();
 if (!SKIN_VERSION) throw new Error("VERSION is empty");
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
-const MAX_ART_BYTES = 16 * 1024 * 1024;
+const DEFAULT_THEME_ROOT = path.join(root, "themes", "builtin-miku-aqua");
+const RENDERER = await loadRendererManifest(root);
 
 function parseArgs(argv) {
   const options = {
@@ -204,8 +213,7 @@ async function connectCodexTargets(port, timeoutMs) {
 }
 
 async function loadTheme(themeDir) {
-  const defaultAssetsRoot = path.join(root, "assets");
-  let assetsRoot = defaultAssetsRoot;
+  let assetsRoot = DEFAULT_THEME_ROOT;
   if (themeDir) {
     try {
       await fs.access(path.join(themeDir, "theme.json"));
@@ -217,93 +225,119 @@ async function loadTheme(themeDir) {
 
   const configPath = path.join(assetsRoot, "theme.json");
   const raw = JSON.parse(await fs.readFile(configPath, "utf8"));
-  if (raw.schemaVersion !== 1 || typeof raw.image !== "string" || !raw.image) {
-    throw new Error(`${configPath} has an unsupported schema or image field`);
+  let packageManifest = null;
+  try {
+    packageManifest = JSON.parse(await fs.readFile(path.join(assetsRoot, "manifest.json"), "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
   }
-  if (path.basename(raw.image) !== raw.image) throw new Error("Theme image must stay inside its theme directory");
-  const text = (value, fallback, max) => typeof value === "string" && value.trim()
-    ? value.trim().slice(0, max) : fallback;
-  const optionalText = (value, max) => typeof value === "string"
-    ? value.replace(/[\r\n]+/g, " ").trim().slice(0, max)
-    : null;
-  const number = (value, fallback, min, max) => {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : fallback;
-  };
-  const color = (value, fallback) => {
-    if (typeof value !== "string") return fallback;
-    const normalized = value.trim();
-    return /^#[0-9a-f]{6}$/i.test(normalized) || /^rgba?\([0-9., %]+\)$/i.test(normalized)
-      ? normalized
-      : fallback;
-  };
-  const theme = {
-    schemaVersion: 1,
-    id: text(raw.id, "custom", 80),
-    name: text(raw.name, "Codex Dream Skin", 80),
-    visualStyle: text(raw.visualStyle, "portal", 80),
-    paletteId: text(raw.paletteId, "custom", 80),
-    paletteName: text(raw.paletteName, raw.name || "自定义配色", 80),
-    backgroundName: text(raw.backgroundName, raw.image, 80),
-    brandSubtitle: optionalText(raw.brandSubtitle, 80) ?? "CODEX DREAM SKIN",
-    tagline: optionalText(raw.tagline, 160) ?? "Make something wonderful.",
-    projectPrefix: optionalText(raw.projectPrefix, 80) ?? "选择项目 · ",
-    projectLabel: optionalText(raw.projectLabel, 80) ?? "◉  选择项目",
-    statusText: optionalText(raw.statusText, 80) ?? "DREAM SKIN ONLINE",
-    quote: optionalText(raw.quote, 80) ?? "MAKE SOMETHING WONDERFUL",
-    image: raw.image,
-    effects: {
-      taskPanelOpacity: number(raw.effects?.taskPanelOpacity, 0.76, 0, 1),
-      taskPanelBlur: number(raw.effects?.taskPanelBlur, 14, 0, 40),
-    },
-    headerText: {
-      title: optionalText(raw.headerText?.title, 80),
-      subtitle: optionalText(raw.headerText?.subtitle, 80),
-      status: optionalText(raw.headerText?.status, 80),
-    },
-    colors: {
-      background: color(raw.colors?.background, "#071116"),
-      panel: color(raw.colors?.panel, "#0b1a20"),
-      panelAlt: color(raw.colors?.panelAlt, "#10272c"),
-      accent: color(raw.colors?.accent, "#7cff46"),
-      accentAlt: color(raw.colors?.accentAlt, "#b8ff3d"),
-      secondary: color(raw.colors?.secondary, "#36d7e8"),
-      highlight: color(raw.colors?.highlight, "#642a8c"),
-      text: color(raw.colors?.text, "#e9fff1"),
-      muted: color(raw.colors?.muted, "#9ebdb3"),
-      line: color(raw.colors?.line, "rgba(124, 255, 70, .28)"),
-    },
-  };
+  const theme = normalizeTheme(raw, {
+    source: configPath,
+    renderer: RENDERER,
+    strict: Boolean(packageManifest),
+  });
+  if (packageManifest) {
+    validateThemePackageManifest(packageManifest, {
+      theme,
+      renderer: RENDERER,
+      engineVersion: SKIN_VERSION,
+      source: path.join(assetsRoot, "manifest.json"),
+    });
+  }
   const imagePath = path.join(assetsRoot, theme.image);
   const imageStat = await fs.stat(imagePath);
-  if (!imageStat.isFile() || imageStat.size < 1 || imageStat.size > MAX_ART_BYTES) {
-    throw new Error(`Theme image must be a non-empty file no larger than ${MAX_ART_BYTES} bytes`);
+  if (!imageStat.isFile() || imageStat.size < 1 || imageStat.size > MAX_THEME_BYTES) {
+    throw new Error(`Theme image must be a non-empty file no larger than ${MAX_THEME_BYTES} bytes`);
   }
-  const extension = path.extname(theme.image).toLowerCase();
-  if (![".png", ".jpg", ".jpeg", ".webp"].includes(extension)) {
-    throw new Error(`Unsupported theme image format: ${extension || "missing"}`);
+  return { assetsRoot, imagePath, imageStat, theme, packageManifest };
+}
+
+async function loadOptionalImageDataUrl(assetsRoot, filename) {
+  if (!filename) return { bytes: 0, dataUrl: null };
+  try {
+    const file = path.join(assetsRoot, filename);
+    const stat = await fs.stat(file);
+    if (!stat.isFile() || stat.size < 1 || stat.size > MAX_AVATAR_BYTES) return { bytes: 0, dataUrl: null };
+    const extension = path.extname(filename).toLowerCase();
+    const mime = extension === ".jpg" || extension === ".jpeg" ? "image/jpeg"
+      : extension === ".webp" ? "image/webp" : "image/png";
+    const data = await fs.readFile(file);
+    return { bytes: data.length, dataUrl: `data:${mime};base64,${data.toString("base64")}` };
+  } catch (error) {
+    if (error.code === "ENOENT") return { bytes: 0, dataUrl: null };
+    throw error;
   }
-  return { assetsRoot, imagePath, imageStat, theme };
 }
 
 async function loadPayload(themeDir) {
-  const [css, template, loaded] = await Promise.all([
-    fs.readFile(path.join(root, "assets", "dream-skin.css"), "utf8"),
-    fs.readFile(path.join(root, "assets", "renderer-inject.js"), "utf8"),
-    loadTheme(themeDir),
+  const loaded = await loadTheme(themeDir);
+  const { assetsRoot, imagePath, theme } = loaded;
+  const layoutRenderer = RENDERER.layouts[theme.layoutId];
+  const qqClassic = layoutRenderer.kind === "qq-classic";
+  const [css, template] = await Promise.all([
+    fs.readFile(layoutRenderer.stylesheet, "utf8"),
+    fs.readFile(layoutRenderer.script, "utf8"),
   ]);
-  const { imagePath, theme } = loaded;
   const art = await fs.readFile(imagePath);
+  const [userAvatar, assistantAvatar] = await Promise.all([
+    loadOptionalImageDataUrl(assetsRoot, theme.avatars.user),
+    loadOptionalImageDataUrl(assetsRoot, theme.avatars.assistant),
+  ]);
   const extension = path.extname(imagePath).toLowerCase();
   const mime = extension === ".jpg" || extension === ".jpeg" ? "image/jpeg"
     : extension === ".webp" ? "image/webp" : "image/png";
   const artDataUrl = `data:${mime};base64,${art.toString("base64")}`;
-  const payload = template
-    .replace("__DREAM_SKIN_CSS_JSON__", JSON.stringify(css))
-    .replace("__DREAM_SKIN_ART_JSON__", JSON.stringify(artDataUrl))
-    .replace("__DREAM_SKIN_THEME_JSON__", JSON.stringify(theme))
-    .replace("__DREAM_SKIN_VERSION_JSON__", JSON.stringify(SKIN_VERSION));
-  return { imageBytes: art.length, payload, theme };
+  const runtimeTheme = {
+    ...theme,
+    rendererApiVersion: RENDERER.apiVersion,
+    appearance: qqClassic ? "light" : undefined,
+    explicitColorKeys: Object.keys(theme.colors),
+    art: qqClassic ? { safeArea: "center", taskMode: "off" } : undefined,
+    avatarDataUrls: {
+      user: userAvatar.dataUrl,
+      assistant: assistantAvatar.dataUrl,
+    },
+    layout: {
+      mode: theme.layoutComponents.threePane ? "classic-three-pane" : "off",
+      rightPanel: theme.layoutComponents.autoOpenSummary ? "open" : "remember",
+      minWidth: theme.layoutComponents.minWidth,
+      rightWidth: theme.layoutComponents.rightWidth,
+    },
+  };
+  let payload;
+  let layoutAssetBytes = 0;
+  if (qqClassic) {
+    const { pet: petPath, retroFrame: retroFramePath, avatar: avatarPath } = layoutRenderer.assets;
+    if (!petPath || !retroFramePath || !avatarPath) throw new Error("QQ Classic renderer assets are incomplete.");
+    const [pet, retroFrame, qqAvatar] = await Promise.all([
+      fs.readFile(petPath),
+      fs.readFile(retroFramePath),
+      fs.readFile(avatarPath),
+    ]);
+    layoutAssetBytes = pet.length + retroFrame.length + qqAvatar.length;
+    payload = template
+      .replace("__QQ_SKIN_CSS_JSON__", JSON.stringify(css))
+      .replace("__QQ_SKIN_ART_JSON__", JSON.stringify(artDataUrl))
+      .replace("__QQ_SKIN_PET_JSON__", JSON.stringify(`data:image/png;base64,${pet.toString("base64")}`))
+      .replace("__QQ_SKIN_RETRO_FRAME_JSON__", JSON.stringify(`data:image/png;base64,${retroFrame.toString("base64")}`))
+      .replace("__QQ_SKIN_QQ_AVATAR_JSON__", JSON.stringify(`data:image/png;base64,${qqAvatar.toString("base64")}`))
+      .replace("__QQ_SKIN_THEME_JSON__", JSON.stringify(runtimeTheme))
+      .replace("__QQ_SKIN_VERSION_JSON__", JSON.stringify(SKIN_VERSION))
+      .replace("__QQ_SKIN_STYLE_REVISION_JSON__", JSON.stringify(createHash("sha256").update(css).digest("hex").slice(0, 20)));
+  } else {
+    payload = template
+      .replace("__DREAM_SKIN_CSS_JSON__", JSON.stringify(css))
+      .replace("__DREAM_SKIN_ART_JSON__", JSON.stringify(artDataUrl))
+      .replace("__DREAM_SKIN_THEME_JSON__", JSON.stringify(runtimeTheme))
+      .replace("__DREAM_SKIN_VERSION_JSON__", JSON.stringify(SKIN_VERSION));
+  }
+  return {
+    imageBytes: art.length,
+    avatarBytes: { user: userAvatar.bytes, assistant: assistantAvatar.bytes },
+    payload,
+    theme,
+    layoutAssetBytes,
+  };
 }
 
 async function applyToSession(session, payload) {
@@ -313,16 +347,25 @@ async function applyToSession(session, payload) {
 async function removeFromSession(session) {
   return session.evaluate(`(() => {
     window.__CODEX_DREAM_SKIN_DISABLED__ = true;
-    const state = window.__CODEX_DREAM_SKIN_STATE__;
-    if (state?.cleanup) return state.cleanup();
+    window.__CODEX_QQ_SKIN_DISABLED__ = true;
+    const dreamState = window.__CODEX_DREAM_SKIN_STATE__;
+    const qqState = window.__CODEX_QQ_SKIN_STATE__;
+    let removed = false;
+    if (dreamState?.cleanup) removed = dreamState.cleanup() || removed;
+    if (qqState?.cleanup) removed = qqState.cleanup() || removed;
     document.documentElement?.classList.remove('codex-dream-skin');
+    document.documentElement?.classList.remove('codex-qq-skin');
     document.documentElement?.removeAttribute('data-dream-shell');
     document.documentElement?.removeAttribute('data-dream-theme');
     document.documentElement?.removeAttribute('data-dream-palette');
     document.documentElement?.style.removeProperty('--dream-skin-art');
     document.getElementById('codex-dream-skin-style')?.remove();
     document.getElementById('codex-dream-skin-chrome')?.remove();
+    for (const id of ['codex-qq-skin-style', 'codex-qq-skin-chrome', 'codex-qq-skin-companion',
+      'codex-qq-skin-home-pet', 'codex-qq-skin-right-tray', 'codex-qq-skin-retro-shell',
+      'codex-qq-skin-retro-profile']) document.getElementById(id)?.remove();
     delete window.__CODEX_DREAM_SKIN_STATE__;
+    delete window.__CODEX_QQ_SKIN_STATE__;
     return true;
   })()`);
 }
@@ -330,9 +373,10 @@ async function removeFromSession(session) {
 async function verifyRemovedSession(session) {
   return session.evaluate(`(() =>
     !document.documentElement.classList.contains('codex-dream-skin') &&
+    !document.documentElement.classList.contains('codex-qq-skin') &&
     !document.getElementById('codex-dream-skin-style') &&
     !document.getElementById('codex-dream-skin-chrome') &&
-    !window.__CODEX_DREAM_SKIN_STATE__
+    !window.__CODEX_DREAM_SKIN_STATE__ && !window.__CODEX_QQ_SKIN_STATE__
   )()`);
 }
 
@@ -362,7 +406,22 @@ async function verifySession(session) {
     const cardBoxes = suggestions ? [...suggestions.querySelectorAll('button')].map((node) => box(node, true)) : [];
     const visibleCards = cardBoxes.filter((item) => item?.visible);
     const hero = box(home?.firstElementChild?.firstElementChild?.firstElementChild, true);
-    const projectButton = box(home?.querySelector('.group\\\\/project-selector > button'));
+    const projectButtonNode = home?.querySelector('.dream-skin-project-button') ??
+      home?.querySelector('.group\\\\/project-selector > button') ??
+      [...(home?.querySelectorAll('button, [role="button"]') ?? [])].find((candidate) => {
+        const label = [candidate.getAttribute('aria-label'), candidate.getAttribute('title'), candidate.textContent]
+          .filter(Boolean).join(' ')
+          .replace(/\\s+/g, ' ').trim().toLowerCase();
+        return label.includes('选择项目') || label.includes('select project') || label.includes('choose project');
+      }) ?? null;
+    const projectButton = box(projectButtonNode);
+    const chatAvatarNodes = [...document.querySelectorAll('.dream-skin-chat-avatar')];
+    const chatAvatars = {
+      total: chatAvatarNodes.length,
+      user: chatAvatarNodes.filter((node) => node.classList.contains('dream-skin-chat-avatar-user')).length,
+      assistant: chatAvatarNodes.filter((node) => node.classList.contains('dream-skin-chat-avatar-assistant')).length,
+      visible: chatAvatarNodes.filter((node) => box(node)?.visible).length,
+    };
     const composer = box(document.querySelector('.composer-surface-chrome'));
     const sidebar = box(document.querySelector('aside.app-shell-left-panel'));
     const chrome = document.getElementById('codex-dream-skin-chrome');
@@ -370,8 +429,10 @@ async function verifySession(session) {
     const threadStyle = threadPanel ? getComputedStyle(threadPanel) : null;
     const rootStyle = getComputedStyle(document.documentElement);
     const result = {
-      installed: document.documentElement.classList.contains('codex-dream-skin'),
-      version: window.__CODEX_DREAM_SKIN_STATE__?.version ?? null,
+      installed: document.documentElement.classList.contains('codex-dream-skin') ||
+        document.documentElement.classList.contains('codex-qq-skin'),
+      layoutId: document.documentElement.classList.contains('codex-qq-skin') ? 'qq-classic' : 'stage',
+      version: window.__CODEX_DREAM_SKIN_STATE__?.version ?? window.__CODEX_QQ_SKIN_STATE__?.version ?? null,
       visualStyle: window.__CODEX_DREAM_SKIN_STATE__?.visualStyle ?? null,
       paletteId: window.__CODEX_DREAM_SKIN_STATE__?.paletteId ?? null,
       effects: window.__CODEX_DREAM_SKIN_STATE__?.effects ?? null,
@@ -387,15 +448,16 @@ async function verifySession(session) {
         backdropFilter: threadStyle.backdropFilter,
         backgroundImage: threadStyle.backgroundImage,
       } : null,
-      stylePresent: Boolean(document.getElementById('codex-dream-skin-style')),
-      chromePresent: Boolean(chrome),
-      chromePointerEvents: getComputedStyle(chrome || document.body).pointerEvents,
+      stylePresent: Boolean(document.getElementById('codex-dream-skin-style') || document.getElementById('codex-qq-skin-style')),
+      chromePresent: Boolean(chrome || document.getElementById('codex-qq-skin-chrome')),
+      chromePointerEvents: getComputedStyle(chrome || document.getElementById('codex-qq-skin-chrome') || document.body).pointerEvents,
       homeRoute: Boolean(homeRoute),
       homePresent: Boolean(home),
       hero,
       cards: cardBoxes,
       visibleCardCount: visibleCards.length,
       projectButton,
+      chatAvatars,
       composer,
       sidebar,
       viewport: { width: innerWidth, height: innerHeight },
@@ -406,7 +468,8 @@ async function verifySession(session) {
     };
     const basePass = result.installed && result.version === ${JSON.stringify(SKIN_VERSION)} &&
       result.stylePresent && result.chromePresent && result.chromePointerEvents === 'none' &&
-      Boolean(result.composer?.visible) && Boolean(result.sidebar?.visible) && !result.documentOverflow.x;
+      Boolean(result.sidebar?.visible) && !result.documentOverflow.x &&
+      (result.layoutId === 'qq-classic' || Boolean(result.composer?.visible));
     // Project selector markup varies across Codex builds — soft requirement.
     const homePass = !result.homeRoute || (
       result.homePresent && result.hero?.visible && result.hero.width >= 280 && result.hero.height >= 120 &&
@@ -549,8 +612,10 @@ async function runWatch(options) {
   for (const session of sessions.values()) session.close();
 }
 
+let watchMode = false;
 try {
   const options = parseArgs(process.argv.slice(2));
+  watchMode = options.mode === "watch";
   if (options.mode === "check") {
     const loaded = await loadPayload(options.themeDir);
     console.log(JSON.stringify({
@@ -559,17 +624,33 @@ try {
       themeId: loaded.theme.id,
       themeName: loaded.theme.name,
       visualStyle: loaded.theme.visualStyle,
+      layoutId: loaded.theme.layoutId,
+      layoutComponents: loaded.theme.layoutComponents,
       paletteId: loaded.theme.paletteId,
       paletteName: loaded.theme.paletteName,
       backgroundName: loaded.theme.backgroundName,
       effects: loaded.theme.effects,
       headerText: loaded.theme.headerText,
       imageBytes: loaded.imageBytes,
+      avatarBytes: loaded.avatarBytes,
+      layoutAssetBytes: loaded.layoutAssetBytes,
       payloadBytes: Buffer.byteLength(loaded.payload),
     }, null, 2));
-  } else if (options.mode === "watch") await runWatch(options);
+  } else if (options.mode === "watch") {
+    await runWatch(options);
+    watchMode = false;
+  }
   else await runOneShot(options);
 } catch (error) {
   console.error(`[dream-skin] ${error.stack || error.message}`);
   process.exitCode = 1;
+}
+
+// Node's built-in WebSocket can keep a CDP connection alive while waiting for
+// a peer close frame, even after a one-shot result has already been printed.
+// Watch mode is intentionally long-lived; every other mode must finish now.
+if (!watchMode) {
+  await Promise.all([process.stdout, process.stderr].map((stream) =>
+    new Promise((resolve) => stream.write("", resolve))));
+  process.exit(process.exitCode ?? 0);
 }

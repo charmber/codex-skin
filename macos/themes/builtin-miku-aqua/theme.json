@@ -1,10 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "custom-1784123441349",
+  "id": "miku-aqua-stage",
   "name": "初音未来 · 未来青",
   "paletteId": "miku-aqua",
   "paletteName": "初音未来 · 未来青",
   "backgroundName": "内置抽象背景",
+  "layoutId": "stage",
   "visualStyle": "miku-07",
   "brandSubtitle": "MIKU CODEX",
   "tagline": "和初音未来一起，把灵感写成可以运行的代码。",
@@ -12,7 +13,7 @@
   "projectLabel": "♪  选择项目",
   "statusText": "MIKU STAGE ONLINE",
   "quote": "BE TOGETHER, BE FUTURE",
-  "image": "portal-hero.png",
+  "image": "background.png",
   "effects": {
     "taskPanelOpacity": 0.76,
     "taskPanelBlur": 14

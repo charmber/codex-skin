@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "stage",
+  "name": "未来舞台",
+  "defaultPaletteId": "miku-night",
+  "editableSections": ["colors", "copy", "avatars", "effects"]
+}

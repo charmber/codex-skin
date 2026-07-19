@@ -375,12 +375,28 @@ stop_recorded_injector() {
 launch_injector_daemon() {
   local port="$1"
   local pid=""
-  local deadline=$((SECONDS + 10))
+  local uid="$(/usr/bin/id -u)"
+  local deadline=$((SECONDS + 6))
   : > "$INJECTOR_LOG"
   : > "$INJECTOR_ERROR_LOG"
+  /bin/launchctl bootout "gui/$uid/$INJECTOR_JOB_LABEL" >/dev/null 2>&1 || true
   /bin/launchctl remove "$INJECTOR_JOB_LABEL" >/dev/null 2>&1 || true
 
-  # Prefer a direct background process — launchctl submit is unreliable on newer macOS.
+  # A user launchd job survives the shell or menu action that requested it.
+  /bin/launchctl submit -l "$INJECTOR_JOB_LABEL" -o "$INJECTOR_LOG" -e "$INJECTOR_ERROR_LOG" -- \
+    "$NODE" "$INJECTOR" --watch --port "$port" --theme-dir "$THEME_DIR" >/dev/null 2>&1 || true
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    pid="$(/bin/launchctl print "gui/$uid/$INJECTOR_JOB_LABEL" 2>/dev/null \
+      | /usr/bin/awk '/^[[:space:]]*pid = [0-9]+/{print $3; exit}')"
+    if [ -n "$pid" ] && /bin/kill -0 "$pid" 2>/dev/null; then
+      printf '%s\n' "$pid"
+      return 0
+    fi
+    /bin/sleep 0.2
+  done
+
+  # Fallback for hosts where launchctl submit is unavailable.
+  /bin/launchctl remove "$INJECTOR_JOB_LABEL" >/dev/null 2>&1 || true
   /usr/bin/nohup "$NODE" "$INJECTOR" --watch --port "$port" --theme-dir "$THEME_DIR" \
     >>"$INJECTOR_LOG" 2>>"$INJECTOR_ERROR_LOG" &
   pid="$!"
@@ -389,28 +405,6 @@ launch_injector_daemon() {
     printf '%s\n' "$pid"
     return 0
   fi
-
-  # Fallback: launchctl submit
-  /bin/launchctl submit -l "$INJECTOR_JOB_LABEL" -o "$INJECTOR_LOG" -e "$INJECTOR_ERROR_LOG" -- \
-    "$NODE" "$INJECTOR" --watch --port "$port" --theme-dir "$THEME_DIR" >/dev/null 2>&1 || true
-  /bin/launchctl kickstart -k "gui/$(/usr/bin/id -u)/$INJECTOR_JOB_LABEL" >/dev/null 2>&1 || true
-  while [ "$SECONDS" -lt "$deadline" ]; do
-    pid="$(/bin/launchctl print "gui/$(/usr/bin/id -u)/$INJECTOR_JOB_LABEL" 2>/dev/null \
-      | /usr/bin/awk '/^[[:space:]]*pid = [0-9]+/{print $3; exit}')"
-    if [ -n "$pid" ] && /bin/kill -0 "$pid" 2>/dev/null; then
-      printf '%s\n' "$pid"
-      return 0
-    fi
-    # Also detect the nohup node process by command line
-    pid="$(/bin/ps -axo pid=,command= | /usr/bin/awk -v inj="$INJECTOR" -v port="$port" '
-      index($0, inj) && index($0, "--watch") && index($0, port) { print $1; exit }
-    ')"
-    if [ -n "$pid" ] && /bin/kill -0 "$pid" 2>/dev/null; then
-      printf '%s\n' "$pid"
-      return 0
-    fi
-    /bin/sleep 0.2
-  done
   fail "The injector did not start. See $INJECTOR_ERROR_LOG and $INJECTOR_LOG"
 }
 
@@ -459,6 +453,27 @@ except Exception: pass' "$STATE_PATH" 2>/dev/null || true)"
   require_macos_runtime
 }
 
+# Bound one-shot helpers even if a CDP WebSocket peer never completes its close
+# handshake. The long-lived --watch injector is never run through this helper.
+run_with_deadline() {
+  local seconds="$1"
+  shift
+  local child watchdog code
+  "$@" &
+  child="$!"
+  (
+    /bin/sleep "$seconds"
+    /bin/kill -TERM "$child" 2>/dev/null || exit 0
+    /bin/sleep 2
+    /bin/kill -KILL "$child" 2>/dev/null || true
+  ) &
+  watchdog="$!"
+  if wait "$child"; then code=0; else code=$?; fi
+  /bin/kill -TERM "$watchdog" 2>/dev/null || true
+  wait "$watchdog" 2>/dev/null || true
+  return "$code"
+}
+
 # Fast path when CDP is already open: restart injector + one-shot inject.
 # Returns 0 on success, 1 if CDP is not ready (caller should full-start).
 hot_reapply_theme() {
@@ -477,7 +492,15 @@ hot_reapply_theme() {
   done < <(/bin/ps -axo pid=,command= | /usr/bin/awk -v inj="$INJECTOR" '
     index($0, inj) && index($0, "--watch") { print $1 }
   ')
-  /bin/sleep 0.15
+  /bin/sleep 0.5
+  # Pre-1.9.1 watchers can ignore TERM while their WebSocket waits for a peer
+  # close frame. This second exact-path pass runs before the replacement starts.
+  while IFS= read -r old; do
+    [ -n "$old" ] || continue
+    /bin/kill -KILL "$old" 2>/dev/null || true
+  done < <(/bin/ps -axo pid=,command= | /usr/bin/awk -v inj="$INJECTOR" '
+    index($0, inj) && index($0, "--watch") { print $1 }
+  ')
 
   local inj_pid
   inj_pid="$(launch_injector_daemon "$port")"
@@ -485,7 +508,8 @@ hot_reapply_theme() {
   /bin/kill -0 "$inj_pid" 2>/dev/null || return 1
 
   # One-shot reloads theme files from disk (watch may still be starting).
-  if ! "$NODE" "$INJECTOR" --once --port "$port" --theme-dir "$THEME_DIR" --timeout-ms "$timeout_ms" >/dev/null 2>&1; then
+  local once_deadline=$(( (timeout_ms + 999) / 1000 + 5 ))
+  if ! run_with_deadline "$once_deadline" "$NODE" "$INJECTOR" --once --port "$port" --theme-dir "$THEME_DIR" --timeout-ms "$timeout_ms" >/dev/null 2>&1; then
     # Soft: keep watch running even if once flaked
     :
   fi

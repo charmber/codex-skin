@@ -93,7 +93,10 @@ fi
 
 lib_dir="$THEMES_ROOT/$theme_id"
 /bin/mkdir -p "$lib_dir"
-/bin/cp -f "$THEME_DIR/$image_name" "$THEME_DIR/theme.json" "$lib_dir/"
+/bin/cp -f "$THEME_DIR/$image_name" "$THEME_DIR/theme.json" "$THEME_DIR/manifest.json" "$lib_dir/"
+for avatar_file in avatar-user.jpg avatar-assistant.jpg; do
+  [ -f "$THEME_DIR/$avatar_file" ] && /bin/cp -f "$THEME_DIR/$avatar_file" "$lib_dir/"
+done
 /bin/chmod 600 "$lib_dir/"* 2>/dev/null || true
 
 dest_lib_img="$IMAGES_DIR/$(/usr/bin/basename "$IMAGE")"

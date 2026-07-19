@@ -86,14 +86,14 @@ write_state "$PORT" "$INJECTOR_PID" "$INJECTOR_STARTED_AT" "$CODEX_PID"
 
 # Soft verify: keep the injector even if secondary selectors differ by Codex version.
 set +e
-"$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 20000 >/tmp/dream-skin-verify.$$.json 2>/dev/null
+run_with_deadline 30 "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 20000 >/tmp/dream-skin-verify.$$.json 2>/dev/null
 verify_code=$?
 set -e
 if [ "$verify_code" -ne 0 ]; then
   # One more force inject before giving up
-  "$NODE" "$INJECTOR" --once --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 15000 >/dev/null 2>&1 || true
+  run_with_deadline 22 "$NODE" "$INJECTOR" --once --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 15000 >/dev/null 2>&1 || true
   set +e
-  "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/tmp/dream-skin-verify.$$.json 2>/dev/null
+  run_with_deadline 20 "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/tmp/dream-skin-verify.$$.json 2>/dev/null
   verify_code=$?
   set -e
 fi

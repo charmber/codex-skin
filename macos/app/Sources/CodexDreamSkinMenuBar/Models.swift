@@ -10,6 +10,8 @@ struct SkinStatus: Decodable {
     let paletteId: String
     let paletteName: String
     let backgroundName: String
+    let layoutId: String
+    let layoutName: String
     let taskPanelOpacityPercent: Double
     let taskPanelBlur: Double
 
@@ -23,6 +25,8 @@ struct SkinStatus: Decodable {
         paletteId: "",
         paletteName: "",
         backgroundName: "",
+        layoutId: "stage",
+        layoutName: "未来舞台",
         taskPanelOpacityPercent: 76,
         taskPanelBlur: 14
     )
@@ -31,6 +35,47 @@ struct SkinStatus: Decodable {
 struct NamedChoice {
     let id: String
     let name: String
+    let layoutId: String?
+
+    init(id: String, name: String, layoutId: String? = nil) {
+        self.id = id
+        self.name = name
+        self.layoutId = layoutId
+    }
+}
+
+struct ThemeLayoutComponents: Decodable {
+    var retroHeader: Bool
+    var toolbar: Bool
+    var threePane: Bool
+    var autoOpenSummary: Bool
+    var companion: Bool
+    var profileCard: Bool
+    var homePet: Bool
+    var minWidth: Double
+    var rightWidth: Double
+    var windowTitle: String
+    var profileName: String
+    var profileStatus: String
+    var companionTitle: String
+    var companionStatus: String
+
+    static let qqClassic = ThemeLayoutComponents(
+        retroHeader: true,
+        toolbar: true,
+        threePane: true,
+        autoOpenSummary: true,
+        companion: true,
+        profileCard: true,
+        homePet: true,
+        minWidth: 1180,
+        rightWidth: 300,
+        windowTitle: "Codex 2007",
+        profileName: "",
+        profileStatus: "在线",
+        companionTitle: "Codex 伙伴",
+        companionStatus: "在线 · 随时待命"
+    )
 }
 
 struct ThemeColors: Decodable {
@@ -74,10 +119,19 @@ struct ThemeHeaderText: Decodable {
     static let empty = ThemeHeaderText(title: "", subtitle: "", status: "")
 }
 
+struct ThemeAvatars: Decodable {
+    var user: String?
+    var assistant: String?
+
+    static let empty = ThemeAvatars(user: nil, assistant: nil)
+}
+
 struct ThemeFile: Decodable {
     let name: String?
     let backgroundName: String?
     let visualStyle: String?
+    let layoutId: String?
+    let layoutComponents: ThemeLayoutComponents?
     let brandSubtitle: String?
     let tagline: String?
     let projectPrefix: String?
@@ -85,6 +139,7 @@ struct ThemeFile: Decodable {
     let statusText: String?
     let quote: String?
     let image: String?
+    let avatars: ThemeAvatars?
     let effects: ThemeEffects?
     let headerText: ThemeHeaderText?
     let colors: ThemeColors?
@@ -94,6 +149,8 @@ struct ThemeDraft {
     var name: String
     var backgroundName: String
     var visualStyle: String
+    var layoutId: String
+    var layoutComponents: ThemeLayoutComponents
     var brandSubtitle: String
     var tagline: String
     var projectPrefix: String
@@ -101,6 +158,8 @@ struct ThemeDraft {
     var statusText: String
     var quote: String
     var imageURL: URL?
+    var userAvatarURL: URL?
+    var assistantAvatarURL: URL?
     var colors: ThemeColors
     var effects: ThemeEffects
     var headerText: ThemeHeaderText
@@ -109,6 +168,8 @@ struct ThemeDraft {
         name: "我的新主题",
         backgroundName: "我的背景",
         visualStyle: "portal",
+        layoutId: "stage",
+        layoutComponents: .qqClassic,
         brandSubtitle: "CODEX DREAM SKIN",
         tagline: "把喜欢的画面变成可交互的 Codex 工作台。",
         projectPrefix: "选择项目 · ",
@@ -116,6 +177,8 @@ struct ThemeDraft {
         statusText: "DREAM SKIN ONLINE",
         quote: "MAKE SOMETHING WONDERFUL",
         imageURL: nil,
+        userAvatarURL: nil,
+        assistantAvatarURL: nil,
         colors: .portal,
         effects: .standard,
         headerText: .empty
@@ -134,6 +197,8 @@ enum EngineError: LocalizedError {
     case scriptMissing(String)
     case deploymentFailed(String)
     case themeUnavailable(String)
+    case scriptTimedOut(String, Int)
+    case scriptCancelled(String)
 
     var errorDescription: String? {
         switch self {
@@ -145,6 +210,10 @@ enum EngineError: LocalizedError {
             return "主题引擎更新失败：\(detail)"
         case .themeUnavailable(let detail):
             return "无法读取当前主题：\(detail)"
+        case .scriptTimedOut(let name, let seconds):
+            return "操作超时：\(name) 在 \(seconds) 秒内没有结束，相关子进程已停止。"
+        case .scriptCancelled(let name):
+            return "操作已取消：\(name)"
         }
     }
 }

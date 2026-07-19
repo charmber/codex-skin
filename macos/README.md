@@ -48,7 +48,7 @@ export NOTARY_KEYCHAIN_PROFILE='codex-dream-skin-notary'
 
 ## Automated GitHub release
 
-The workflow at `.github/workflows/macos-release.yml` builds and publishes an unsigned universal DMG when a tag such as `v1.6.0` matches `macos/VERSION`. No Apple Developer Program membership or GitHub signing secrets are required in this mode.
+The workflow at `.github/workflows/macos-release.yml` builds and publishes an unsigned universal DMG when a tag such as `v1.7.0` matches `macos/VERSION`. No Apple Developer Program membership or GitHub signing secrets are required in this mode.
 
 Update `VERSION` and `CHANGELOG.md`, commit the release, and push the matching tag. The workflow uploads the DMG and `SHA256SUMS.txt` to GitHub Release automatically.
 
@@ -105,16 +105,29 @@ Install location after step 2:
 
 Choose `打开主题工作室…` from the native `Skin` menu to create a complete theme. The editor exposes:
 
-- Theme and background names, a live image preview, background picker, and visual-shell style.
+Choose `打开主题商店…` to open <https://skin.beanplay.cn> in the default browser. Local development can override this destination with `CODEX_DREAM_SKIN_STORE_URL=http://127.0.0.1:5173`.
+
+- Theme and background names, a live image preview, background picker, and layout theme.
 - All ten theme colors: page, two panels, two accents, secondary, highlight, primary/muted text, and borders.
 - Home/project copy, top header copy, task-panel opacity, and backdrop blur.
+- Separate circular avatars for user questions and Codex answers, with native image pickers and previews.
+- A Classic Blue-only layout-components page for the retro header, toolbar, three-pane summary, companion, profile card, home character, labels, and widths.
 - `新建主题` for a clean draft and `保存后立即应用` for optional hot apply.
 
-Every save creates a self-contained entry under the user theme library with its associated prepared background. Saved themes appear under `历史组合` and can be loaded again later.
+Every save creates a self-contained entry under the user theme library with its associated prepared background and optional chat avatars. Saved themes appear under `历史组合` and can be loaded again later.
+
+Portable theme sharing is built in from `1.10.0`:
+
+- `导出当前主题...` writes a `.cds-theme.zip` with the active declarative configuration, background, and optional avatars.
+- `导入主题包...` validates and atomically installs a compatible package, then hot-applies it when CDP is available.
+- Theme packages contain no JavaScript, CSS, shell scripts, or renderer assets. Trusted renderer implementations live under `renderer/`; theme data lives under `themes/` or the user theme library.
+
+The complete package tree, manifest and theme fields, JSON Schemas, manual authoring steps, CLI commands, limits, and compatibility rules are documented in [`THEME_PACKAGE.md`](./THEME_PACKAGE.md).
 
 The quick choices remain available and independent:
 
-- `配色主题` changes the interface colors and shell. Choose `初音未来 · 未来青`, `演出夜`, or `樱花舞台`.
+- `布局主题` switches between `未来舞台` and `经典蓝 QQ 工作台`; it loads that layout's default compatible palette.
+- `配色方案` changes colors inside the active layout. The Stage layout offers `未来青`, `演出夜`, and `樱花舞台`; Classic Blue offers its own default scheme.
 - `背景图片` changes only the pure image. It keeps the selected palette.
 - `快速换背景图…` imports another image and keeps the selected palette.
 - `调整阅读区磨砂与透明度…` sets task-panel opacity from 0–100 and backdrop blur from 0–40 px.
@@ -124,12 +137,24 @@ The quick choices remain available and independent:
 Reading-panel and header-text preferences are independent from palettes and backgrounds, so later switches keep your values.
 
 Changes normally hot-apply in a few seconds. A full Codex restart is only used when the loopback CDP session is unavailable.
+While an action is running, the menu shows its real operation name. Non-deployment actions can be stopped with `取消当前操作`, and stalled background scripts are terminated automatically instead of leaving `Skin ...` indefinitely.
 
 CLI examples:
 
 ```bash
+# Export the active theme as a portable package
+~/.codex/codex-dream-skin-studio/scripts/export-theme-package-macos.sh \
+  --output "$HOME/Desktop/My-Theme.cds-theme.zip"
+
+# Import and apply a portable package
+~/.codex/codex-dream-skin-studio/scripts/import-theme-package-macos.sh \
+  --file "$HOME/Downloads/My-Theme.cds-theme.zip"
+
 # Change colors, keep background
 ~/.codex/codex-dream-skin-studio/scripts/switch-palette-macos.sh --id miku-aqua
+
+# Switch to the Classic Blue layout and its default palette, keeping user preferences
+~/.codex/codex-dream-skin-studio/scripts/switch-layout-macos.sh --id qq-classic
 
 # Change background, keep colors
 ~/.codex/codex-dream-skin-studio/scripts/load-image-theme-macos.sh \
@@ -157,12 +182,12 @@ That ZIP contains a visible installer plus a hidden `.codex-dream-skin-studio` e
 ## How it works (security boundary)
 
 1. The menu bar app atomically deploys its bundled engine to the stable user path.
-2. Discover `com.openai.codex` and validate signature / Team ID / arch / bundled Node.
-3. Start Codex with CDP bound to `127.0.0.1` only.
-4. Accept the debug port only when it belongs to Codex (or a legitimate child).
-5. Inject only into expected `app://` renderer targets.
-6. Keep a small injector alive across reloads and route changes.
-7. Restore stops the injector only when PID, path, and start time match the recorded job.
+2. The trusted `renderer/manifest.json` selects built-in renderers; themes provide declarative values and local images only.
+3. Imported packages are checked for traversal, links, size, schema, asset references, renderer API, layout, and minimum engine version before atomic installation.
+4. Discover `com.openai.codex` and validate signature / Team ID / arch / bundled Node.
+5. Start Codex with CDP bound to `127.0.0.1` only.
+6. Accept the debug port only when it belongs to Codex (or a legitimate child), then inject only into expected `app://` renderer targets.
+7. Keep a small injector alive across reloads and route changes; Restore stops it only when PID, path, command, and start time match.
 
 The menu bar app uses direct executable paths and argument arrays when calling the engine. It does not pass theme names or image paths through `shell -c`.
 

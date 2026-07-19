@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "id": "miku-sakura",
   "name": "初音未来 · 樱花舞台",
+  "layoutId": "stage",
   "visualStyle": "miku-07",
   "brandSubtitle": "MIKU CODEX / SAKURA STAGE",
   "tagline": "把春天的节拍，写进每一次运行。",

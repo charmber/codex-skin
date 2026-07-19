@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Codex Dream Skin - 经典蓝工作台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue-950: #124686;
+      --blue-900: #18569e;
+      --blue-800: #2674c7;
+      --blue-700: #3a8ee0;
+      --blue-600: #60a8e9;
+      --blue-300: #a9d3f5;
+      --blue-200: #c9e4f9;
+      --blue-100: #eaf5fd;
+      --blue-050: #f6fbff;
+      --line: #78a7ce;
+      --line-soft: #b7d0e5;
+      --text: #14243a;
+      --muted: #61768d;
+      --green: #62aa22;
+      --orange: #d98619;
+      --panel-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(30,74,119,.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #bedcf4;
+      color: var(--text);
+      font-family: Tahoma, "Microsoft YaHei", "PingFang SC", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 42px 66px minmax(0, 1fr) 34px;
+      border: 1px solid #0f4f92;
+      background: var(--blue-100);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.72);
+    }
+
+    .titlebar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 14px;
+      color: #fff;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.22), transparent 46%),
+        linear-gradient(180deg, #3d98e8 0%, #1c6bc3 54%, #12569f 100%);
+      border-bottom: 1px solid #0d447f;
+      text-shadow: 0 1px 1px rgba(0,45,96,.72);
+    }
+
+    .window-controls { display: flex; align-items: center; gap: 9px; }
+    .window-controls i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); }
+    .window-controls i:nth-child(1) { background: #ff5e57; }
+    .window-controls i:nth-child(2) { background: #ffbd2e; }
+    .window-controls i:nth-child(3) { background: #28c840; }
+
+    .window-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 0;
+      font-weight: 700;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .app-glyph {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.82);
+      background: linear-gradient(180deg, #eafdff, #8ee0ef);
+      color: #0d4b82;
+      font: 800 14px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-shadow: none;
+      box-shadow: 0 1px 2px rgba(0,47,90,.35), inset 0 1px 0 #fff;
+    }
+
+    .connection {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .connection::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #8ef458;
+      border: 1px solid #2c7e13;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.25);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: stretch;
+      gap: 2px;
+      padding: 8px 14px 7px;
+      background: linear-gradient(180deg, #ffffff 0%, #eaf5fe 52%, #c7e2f7 100%);
+      border-bottom: 1px solid #6e9dc6;
+      box-shadow: inset 0 -1px 0 #f8fcff;
+    }
+
+    .tool {
+      min-width: 112px;
+      height: 49px;
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: transparent;
+      font-weight: 700;
+      cursor: default;
+    }
+    .tool:hover, .tool.active {
+      border-color: #78a9d1;
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(191,224,248,.82));
+      box-shadow: var(--panel-shadow);
+    }
+
+    .tool-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #78a1c4;
+      border-radius: 5px;
+      color: #174f87;
+      background: linear-gradient(180deg, #fff, #c5e2f6);
+      box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(41,84,123,.2);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .toolbar-spacer { flex: 1; }
+    .skin-badge {
+      align-self: center;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid #8bb0d0;
+      border-radius: 5px;
+      background: rgba(255,255,255,.66);
+      color: #3d5e7a;
+      font-size: 12px;
+      box-shadow: inset 0 1px 0 #fff;
+    }
+    .skin-badge b { color: #1f68ad; }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 256px minmax(560px, 1fr) 270px;
+      grid-template-rows: minmax(0, 1fr);
+      gap: 7px;
+      padding: 7px;
+      background: linear-gradient(180deg, #dceefb, #c7e2f5);
+    }
+
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid #6796bd;
+      border-radius: 6px;
+      background: rgba(247,252,255,.96);
+      box-shadow: var(--panel-shadow);
+      overflow: hidden;
+    }
+
+    .panel-heading {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      border-bottom: 1px solid #86afd0;
+      background: linear-gradient(180deg, #ffffff, #dceefb);
+      color: #173f68;
+      font-weight: 700;
+      text-shadow: 0 1px 0 #fff;
+    }
+
+    .panel-heading .chevron { margin-left: auto; color: #346c9d; }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+    }
+
+    .brand-mark {
+      width: 23px;
+      height: 23px;
+      display: grid;
+      place-items: center;
+      border-radius: 5px;
+      border: 1px solid #4282b8;
+      background: linear-gradient(180deg, #ddfbff, #65cfe2);
+      color: #124b77;
+      font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .primary-nav { padding: 6px; border-bottom: 1px solid #b8d1e4; }
+    .nav-item, .task-item {
+      width: 100%;
+      min-height: 34px;
+      display: grid;
+      grid-template-columns: 25px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      text-align: left;
+      cursor: default;
+    }
+    .nav-item.active, .nav-item:hover, .task-item.active, .task-item:hover {
+      border-color: #8ab4d5;
+      background: linear-gradient(180deg, #effaff, #cfe9fa);
+      box-shadow: inset 0 1px 0 #fff;
+    }
+    .nav-item.active { font-weight: 700; }
+    .nav-icon { color: #1d6fb4; font-size: 17px; text-align: center; }
+    .shortcut { color: #71869b; font-size: 11px; }
+
+    .side-scroll { min-height: 0; overflow: hidden; }
+    .side-section { padding-bottom: 5px; }
+    .section-title {
+      height: 29px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border-top: 1px solid #fff;
+      border-bottom: 1px solid #a9c7df;
+      background: linear-gradient(180deg, #eef8ff, #d4e9f8);
+      color: #336a98;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .side-section:first-child .section-title { border-top: 0; }
+    .task-list { padding: 4px 6px; }
+    .task-item { min-height: 31px; }
+    .task-icon { color: #c78c21; text-align: center; font-size: 16px; }
+    .task-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .task-meta { color: #8194a6; font-size: 11px; }
+
+    .account {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-top: 1px solid #9fc0da;
+      background: linear-gradient(180deg, #eef8ff, #d7ebf9);
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      border: 1px solid #4e8cbd;
+      background: linear-gradient(180deg, #78d8e8, #3286c5);
+      color: #fff;
+      font: 800 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-shadow: 0 1px 1px #16507e;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .account-name { font-weight: 700; }
+    .account-status { margin-top: 3px; color: #5d7287; font-size: 11px; }
+    .account-status::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; background: #70b72c; border: 1px solid #4a8f12; }
+
+    .main {
+      display: grid;
+      grid-template-rows: 39px minmax(0, 1fr) 142px;
+      background: #fff;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      border-bottom: 1px solid #8fb4d0;
+      background: linear-gradient(180deg, #ffffff, #e0f0fb);
+    }
+    .task-doc {
+      width: 22px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #5f91b9;
+      border-radius: 3px;
+      background: #fff;
+      color: #2e79b4;
+      font-weight: 700;
+    }
+    .task-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; color: #173e65; }
+    .task-actions { margin-left: auto; display: flex; gap: 5px; }
+    .icon-button {
+      width: 27px;
+      height: 27px;
+      display: grid;
+      place-items: center;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: #376b98;
+    }
+    .icon-button:hover { border-color: #8bb3d2; background: #eff8fe; }
+
+    .conversation {
+      min-height: 0;
+      overflow: hidden;
+      padding: 20px 20px 12px;
+      background:
+        linear-gradient(rgba(255,255,255,.95), rgba(255,255,255,.95)),
+        repeating-linear-gradient(0deg, transparent 0 27px, rgba(78,139,191,.08) 27px 28px);
+    }
+
+    .message { max-width: 900px; margin: 0 auto 18px; }
+    .message-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 7px;
+      color: #47718f;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .message-label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #2b7fc4; border: 1px solid #155b97; }
+
+    .user-bubble {
+      padding: 11px 14px;
+      border: 1px solid #9fbfd8;
+      border-radius: 5px;
+      background: linear-gradient(180deg, #fafdff, #e7f3fb);
+      box-shadow: inset 0 1px 0 #fff;
+      line-height: 1.6;
+    }
+
+    .answer {
+      padding: 1px 5px 0;
+      color: #17263a;
+      line-height: 1.66;
+    }
+    .answer p { margin: 0 0 10px; }
+    .answer h2 { margin: 12px 0 8px; font-size: 15px; color: #154c7a; }
+    .answer ul { margin: 0 0 11px; padding: 0; list-style: none; }
+    .answer li { position: relative; margin: 6px 0; padding-left: 19px; }
+    .answer li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 7px; height: 7px; border-radius: 50%; background: #2f83c8; border: 1px solid #155d99; }
+    code.inline {
+      padding: 2px 6px;
+      border: 1px solid #b7cfe0;
+      border-radius: 4px;
+      background: #eef5fa;
+      color: #163e61;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .92em;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 9px 0 12px;
+      padding: 27px 13px 12px;
+      overflow: hidden;
+      border: 1px solid #7ca5c4;
+      border-radius: 5px;
+      background: #f2f8fc;
+      box-shadow: inset 0 1px 0 #fff;
+      color: #173553;
+      font: 12px/1.62 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    .code-block::before {
+      content: "theme.json";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 23px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border-bottom: 1px solid #aac8dd;
+      background: linear-gradient(180deg, #fff, #dceef9);
+      color: #4a708f;
+      font: 11px/1 Tahoma, sans-serif;
+    }
+    .code-key { color: #17649e; }
+    .code-value { color: #23813d; }
+
+    .message-meta { margin-top: 9px; color: #71879a; font-size: 11px; }
+
+    .composer-wrap {
+      padding: 8px 10px 10px;
+      border-top: 1px solid #97b9d3;
+      background: linear-gradient(180deg, #eef8ff, #d8ebf9);
+    }
+    .composer {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 34px 1fr 33px;
+      border: 1px solid #709dc1;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(42,83,119,.22);
+      overflow: hidden;
+    }
+    .composer-tools, .composer-footer {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 9px;
+      background: linear-gradient(180deg, #ffffff, #e2f1fb);
+    }
+    .composer-tools { border-bottom: 1px solid #b3cee2; }
+    .composer-footer { border-top: 1px solid #c2d8e8; }
+    .mini-tool { display: inline-flex; align-items: center; gap: 5px; color: #345f82; font-size: 12px; }
+    .composer-placeholder { padding: 11px 12px; color: #8495a5; }
+    .model { margin-left: auto; color: #406582; font-size: 12px; }
+    .send {
+      height: 27px;
+      min-width: 86px;
+      padding: 0 13px;
+      border: 1px solid #1e5f9c;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #57a9ea, #2074bc);
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 1px 1px #164f82;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+    }
+
+    .right-rail {
+      display: grid;
+      grid-template-rows: 252px auto auto minmax(0, 1fr);
+      gap: 7px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      overflow: visible;
+    }
+    .right-rail > section { border: 1px solid #6796bd; border-radius: 6px; background: rgba(247,252,255,.97); box-shadow: var(--panel-shadow); overflow: hidden; }
+
+    .assistant-card {
+      display: grid;
+      grid-template-rows: 38px 132px 1fr;
+    }
+    .assistant-portrait {
+      position: relative;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0)),
+        linear-gradient(180deg, #dff6ff 0%, #b9e1fa 58%, #d7efff 100%);
+      border-bottom: 1px solid #9bc0dc;
+    }
+    .assistant-portrait::before {
+      content: "✦    ·      ✧        ·     ✦";
+      position: absolute;
+      inset: 16px 10px auto;
+      color: rgba(255,255,255,.95);
+      font-size: 16px;
+      word-spacing: 12px;
+      text-shadow: 0 0 4px #6aa9d9;
+    }
+
+    .bot { position: relative; width: 102px; height: 112px; margin-top: 12px; }
+    .bot-antenna { position: absolute; top: 0; left: 49px; width: 4px; height: 16px; border-radius: 2px; background: #235d9d; }
+    .bot-antenna::before { content: ""; position: absolute; top: -5px; left: -4px; width: 12px; height: 12px; border-radius: 50%; background: #80d7ec; border: 2px solid #25598f; }
+    .bot-head {
+      position: absolute;
+      top: 17px;
+      left: 7px;
+      width: 88px;
+      height: 67px;
+      border: 3px solid #143f77;
+      border-radius: 22px 22px 17px 17px;
+      background: linear-gradient(180deg, #5b92e7, #3d66c5 55%, #244ba4);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.3), 0 3px 0 rgba(48,93,145,.25);
+    }
+    .bot-face {
+      position: absolute;
+      inset: 14px 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border: 2px solid #0c2e5e;
+      border-radius: 13px;
+      background: #112c5c;
+      color: #80edf4;
+      font: 800 22px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      box-shadow: inset 0 0 12px rgba(57,183,222,.22);
+    }
+    .bot-mouth { transform: translateY(1px); }
+    .bot-body {
+      position: absolute;
+      left: 27px;
+      bottom: 0;
+      width: 49px;
+      height: 34px;
+      border: 3px solid #17437c;
+      border-radius: 8px 8px 12px 12px;
+      background: linear-gradient(180deg, #5e9ae8, #2d64bb);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.33);
+    }
+    .bot-body::before, .bot-body::after { content: ""; position: absolute; top: 5px; width: 16px; height: 9px; border: 3px solid #17437c; background: #4b83d4; }
+    .bot-body::before { left: -17px; border-radius: 8px 0 0 8px; }
+    .bot-body::after { right: -17px; border-radius: 0 8px 8px 0; }
+    .bot-command { display: grid; place-items: center; height: 100%; color: #d5fbff; font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .assistant-copy { padding: 8px 11px 10px; }
+    .assistant-name { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-weight: 700; color: #204b74; }
+    .online-dot { width: 10px; height: 10px; border-radius: 50%; background: #76bd30; border: 1px solid #4b8f14; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
+    .level { margin-left: auto; padding: 1px 5px; border: 1px solid #bf7418; border-radius: 3px; background: #f5a62f; color: #fff; font-size: 10px; text-shadow: 0 1px #9b5d12; }
+    .assistant-copy p { margin: 0; color: #527087; font-size: 12px; line-height: 1.5; }
+
+    .info-card .panel-heading { height: 34px; font-size: 12px; }
+    .info-body { padding: 7px 10px 9px; }
+    .info-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; min-height: 29px; gap: 5px; border-bottom: 1px dotted #bfd3e2; }
+    .info-row:last-child { border-bottom: 0; }
+    .info-row .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #2a557a; }
+    .info-row .v { color: #73889a; font-size: 11px; }
+    .state-icon { color: #2b79b8; text-align: center; }
+    .state-ok { color: #4f9b1c !important; font-weight: 700; }
+    .state-warn { color: #c87918 !important; font-weight: 700; }
+
+    .activity-card { min-height: 0; }
+    .activity-body { padding: 8px 10px; }
+    .activity-item { position: relative; padding: 0 0 10px 18px; color: #48667f; font-size: 12px; line-height: 1.45; }
+    .activity-item::before { content: ""; position: absolute; left: 2px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #4e9bd4; border: 1px solid #2c70a9; }
+    .activity-item::after { content: ""; position: absolute; left: 6px; top: 14px; bottom: 0; width: 1px; background: #b5d0e3; }
+    .activity-item:last-child::after { display: none; }
+    .activity-time { display: block; margin-top: 2px; color: #8294a3; font-size: 10px; }
+
+    .statusbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      align-items: center;
+      gap: 16px;
+      padding: 0 12px;
+      border-top: 1px solid #4f8fc4;
+      color: #244f75;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.42), transparent 42%),
+        linear-gradient(180deg, #9bd0f4, #66aee4);
+      font-size: 11px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .statusbar span { white-space: nowrap; }
+    .shield { color: #3a8e16; font-weight: 700; }
+
+    @media (max-width: 1180px) {
+      .workspace { grid-template-columns: 230px minmax(0, 1fr); }
+      .right-rail { display: none; }
+      .tool { min-width: 96px; }
+      .skin-badge { display: none; }
+    }
+
+    @media (max-width: 820px) {
+      .app { grid-template-rows: 40px 55px minmax(0, 1fr) 31px; }
+      .titlebar { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .connection span { display: none; }
+      .toolbar { padding: 5px 7px; overflow: hidden; }
+      .tool { min-width: 46px; width: 46px; height: 43px; grid-template-columns: 1fr; padding: 0 7px; }
+      .tool > span:last-child { display: none; }
+      .workspace { grid-template-columns: minmax(0, 1fr); padding: 5px; }
+      .sidebar { display: none; }
+      .main { grid-template-rows: 39px minmax(0, 1fr) 132px; }
+      .conversation { padding: 15px 12px 8px; }
+      .statusbar { grid-template-columns: 1fr auto; }
+      .statusbar span:nth-child(2), .statusbar span:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="Codex 经典蓝主题效果图">
+    <header class="titlebar">
+      <div class="window-controls" aria-label="窗口控制"><i></i><i></i><i></i></div>
+      <div class="window-title"><span class="app-glyph">&gt;_</span><span>Codex · Dream Skin 经典蓝工作台</span></div>
+      <div class="connection"><span>本机主题已连接</span></div>
+    </header>
+
+    <nav class="toolbar" aria-label="快捷工具栏">
+      <button class="tool active"><span class="tool-icon">＋</span><span>新建任务</span></button>
+      <button class="tool"><span class="tool-icon">⌕</span><span>搜索</span></button>
+      <button class="tool"><span class="tool-icon">◷</span><span>自动化</span></button>
+      <button class="tool"><span class="tool-icon">⎇</span><span>代码审查</span></button>
+      <button class="tool"><span class="tool-icon">✦</span><span>技能</span></button>
+      <div class="toolbar-spacer"></div>
+      <div class="skin-badge"><span>主题</span><b>CLASSIC BLUE 07</b></div>
+    </nav>
+
+    <section class="workspace">
+      <aside class="sidebar panel">
+        <div class="panel-heading"><span class="brand-mark">CX</span><span>Codex</span><span class="chevron">⌃</span></div>
+        <div class="primary-nav">
+          <button class="nav-item active"><span class="nav-icon">＋</span><span>新建任务</span><span class="shortcut">⌘N</span></button>
+          <button class="nav-item"><span class="nav-icon">◷</span><span>已安排</span><span></span></button>
+          <button class="nav-item"><span class="nav-icon">⌕</span><span>搜索任务</span><span>⌘K</span></button>
+          <button class="nav-item"><span class="nav-icon">✦</span><span>技能</span><span></span></button>
+          <button class="nav-item"><span class="nav-icon">⎇</span><span>代码审查</span><span></span></button>
+        </div>
+
+        <div class="side-scroll">
+          <section class="side-section">
+            <div class="section-title">置顶</div>
+            <div class="task-list">
+              <button class="task-item"><span class="task-icon">▰</span><span class="task-name">Codex-Dream-Skin</span><span class="task-meta">main</span></button>
+              <button class="task-item"><span class="task-icon">▰</span><span class="task-name">kefu-service</span><span class="task-meta">dev</span></button>
+            </div>
+          </section>
+          <section class="side-section">
+            <div class="section-title">项目</div>
+            <div class="task-list">
+              <button class="task-item"><span class="task-icon">▰</span><span class="task-name">界面主题方案</span><span></span></button>
+              <button class="task-item"><span class="task-icon">▰</span><span class="task-name">macOS 安装器</span><span></span></button>
+              <button class="task-item"><span class="task-icon">▰</span><span class="task-name">主题工作室</span><span></span></button>
+            </div>
+          </section>
+          <section class="side-section">
+            <div class="section-title">最近任务</div>
+            <div class="task-list">
+              <button class="task-item active"><span class="task-icon">◆</span><span class="task-name">设计经典蓝 Codex 主题</span><span class="task-meta">现在</span></button>
+              <button class="task-item"><span class="task-icon">◇</span><span class="task-name">检查 CDP 热更新</span><span class="task-meta">昨天</span></button>
+              <button class="task-item"><span class="task-icon">◇</span><span class="task-name">调整阅读区透明度</span><span class="task-meta">周二</span></button>
+            </div>
+          </section>
+        </div>
+
+        <div class="account">
+          <div class="avatar">CX</div>
+          <div><div class="account-name">charmber</div><div class="account-status">本机在线</div></div>
+          <span>⚙</span>
+        </div>
+      </aside>
+
+      <section class="main panel">
+        <header class="task-header">
+          <span class="task-doc">◆</span>
+          <div class="task-title">设计经典蓝 Codex 主题</div>
+          <div class="task-actions"><button class="icon-button" title="共享">↗</button><button class="icon-button" title="更多">•••</button></div>
+        </header>
+
+        <div class="conversation">
+          <article class="message">
+            <div class="message-label">你</div>
+            <div class="user-bubble">能否把 Codex 的界面做成 2007 年经典桌面软件的风格？请保留真实任务、代码审查和输入功能。</div>
+          </article>
+
+          <article class="message">
+            <div class="message-label">Codex</div>
+            <div class="answer">
+              <p>可以。这套方案把参考图的经典蓝玻璃标题栏、浅蓝分区边框和紧凑工具栏，映射到 Codex 现有界面，不修改官方应用文件。</p>
+              <h2>可实现的主题结构</h2>
+              <ul>
+                <li><code class="inline">左侧栏</code> 保留原生任务、项目和搜索入口，只重做配色、行高与选中态。</li>
+                <li><code class="inline">主对话区</code> 使用白底阅读面板、经典代码框和蓝色输入工具栏。</li>
+                <li><code class="inline">右侧状态栏</code> 由 Dream Skin 注入静态主题状态；窄窗口自动隐藏。</li>
+              </ul>
+              <div class="code-block"><span class="code-key">"visualStyle"</span>: <span class="code-value">"classic-blue-07"</span>,
+<span class="code-key">"shell"</span>: <span class="code-value">"light"</span>,
+<span class="code-key">"accent"</span>: <span class="code-value">"#2674c7"</span>,
+<span class="code-key">"panel"</span>: <span class="code-value">"#f6fbff"</span></div>
+              <p>新任务、搜索、对话、输入和代码块仍然是 Codex 原生控件，可以正常操作。</p>
+              <div class="message-meta">已分析当前主题注入能力 · 22:48</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="composer-wrap">
+          <div class="composer">
+            <div class="composer-tools"><span class="mini-tool">☺ 表情</span><span class="mini-tool">▧ 图片</span><span class="mini-tool">⌕ 附加</span></div>
+            <div class="composer-placeholder">向 Codex 发送消息或描述下一步修改…</div>
+            <div class="composer-footer"><span class="mini-tool">＋</span><span class="mini-tool">完全访问</span><span class="model">GPT-5.6 · 高</span><button class="send">发送</button></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="right-rail">
+        <section class="assistant-card">
+          <div class="panel-heading"><span>◉</span><span>Codex 助手</span><span class="chevron">⌃</span></div>
+          <div class="assistant-portrait">
+            <div class="bot" aria-hidden="true">
+              <div class="bot-antenna"></div>
+              <div class="bot-head"><div class="bot-face"><span>&gt;</span><span class="bot-mouth">_</span></div></div>
+              <div class="bot-body"><span class="bot-command">&gt;_</span></div>
+            </div>
+          </div>
+          <div class="assistant-copy">
+            <div class="assistant-name"><span class="online-dot"></span><span>Codex 小蓝</span><span class="level">LV 07</span></div>
+            <p>正在为 Codex-Dream-Skin 设计可落地的经典蓝界面。</p>
+          </div>
+        </section>
+
+        <section class="info-card">
+          <div class="panel-heading"><span>▣</span><span>当前项目</span><span class="chevron">⌃</span></div>
+          <div class="info-body">
+            <div class="info-row"><span class="state-icon">▰</span><span class="k">Codex-Dream-Skin</span><span class="v">main</span></div>
+            <div class="info-row"><span class="state-icon">⎇</span><span class="k">工作区状态</span><span class="v state-ok">正常</span></div>
+            <div class="info-row"><span class="state-icon">⌁</span><span class="k">CDP 连接</span><span class="v state-ok">127.0.0.1</span></div>
+          </div>
+        </section>
+
+        <section class="info-card">
+          <div class="panel-heading"><span>✦</span><span>主题状态</span><span class="chevron">⌃</span></div>
+          <div class="info-body">
+            <div class="info-row"><span class="state-icon">◈</span><span class="k">经典蓝工作台</span><span class="v state-ok">已应用</span></div>
+            <div class="info-row"><span class="state-icon">◐</span><span class="k">浅色外壳</span><span class="v">自动</span></div>
+            <div class="info-row"><span class="state-icon">↻</span><span class="k">热更新</span><span class="v state-ok">可用</span></div>
+          </div>
+        </section>
+
+        <section class="activity-card">
+          <div class="panel-heading"><span>◷</span><span>最近活动</span><span class="chevron">⌃</span></div>
+          <div class="activity-body">
+            <div class="activity-item">读取当前主题配置<span class="activity-time">刚刚</span></div>
+            <div class="activity-item">分析原生任务布局<span class="activity-time">1 分钟前</span></div>
+            <div class="activity-item">确认外部 CDP 安全边界<span class="activity-time">2 分钟前</span></div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <footer class="statusbar">
+      <span>经典蓝工作台 · Codex Dream Skin</span>
+      <span class="shield">◆ 安全：未修改官方应用</span>
+      <span>本机 CDP</span>
+      <span>22:48</span>
+    </footer>
+  </main>
+</body>
+</html>
