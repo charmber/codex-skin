@@ -3,8 +3,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 CODEX_NODE="/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+SKIP_RUNTIME_TESTS="${CODEX_DREAM_SKIN_SKIP_RUNTIME_TESTS:-false}"
 CODEX_RUNTIME_AVAILABLE="false"
-if [ -x "$CODEX_NODE" ]; then CODEX_RUNTIME_AVAILABLE="true"; fi
+if [ "$SKIP_RUNTIME_TESTS" != "true" ] && [ -x "$CODEX_NODE" ]; then
+  CODEX_RUNTIME_AVAILABLE="true"
+fi
 if [ -z "${NODE:-}" ]; then
   if [ "$CODEX_RUNTIME_AVAILABLE" = "true" ]; then
     NODE="$CODEX_NODE"
@@ -15,6 +18,7 @@ fi
 [ -x "$NODE" ] || { printf 'Node.js 20 or newer is required for static tests.\n' >&2; exit 1; }
 NODE_MAJOR="$($NODE -p 'Number(process.versions.node.split(".")[0])')"
 [ "$NODE_MAJOR" -ge 20 ] || { printf 'Node.js 20 or newer is required; found %s.\n' "$($NODE --version)" >&2; exit 1; }
+export NODE
 VERSION="$(/usr/bin/tr -d '[:space:]' < "$ROOT/VERSION")"
 [ -n "$VERSION" ] || { printf 'VERSION is empty.\n' >&2; exit 1; }
 PACKAGE_VERSION="$($NODE -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).version)' "$ROOT/package.json")"
@@ -141,31 +145,33 @@ PAYLOAD_JSON="$("$NODE" "$ROOT/scripts/injector.mjs" --check-payload --theme-dir
   if (t.avatars?.user !== "avatar-user.png" || t.avatars?.assistant !== "avatar-assistant.png") process.exit(1);
 ' "$TMP/theme/theme.json"
 
-AVATAR_HOME="$TMP/avatar-home"
-HOME="$AVATAR_HOME" "$ROOT/scripts/customize-theme-macos.sh" \
-  --image "$ROOT/themes/builtin-miku-aqua/background.png" --name '头像上传测试' --background-name '测试背景' \
-  --user-avatar "$ROOT/themes/builtin-miku-aqua/background.png" --assistant-avatar "$ROOT/themes/builtin-miku-aqua/background.png" \
-  --save-theme --no-apply >/dev/null
-AVATAR_STATE="$AVATAR_HOME/Library/Application Support/CodexDreamSkinStudio"
-[ -s "$AVATAR_STATE/theme/avatar-user.jpg" ]
-[ -s "$AVATAR_STATE/theme/avatar-assistant.jpg" ]
-AVATAR_HISTORY="$(/usr/bin/find "$AVATAR_STATE/themes" -mindepth 1 -maxdepth 1 -type d | /usr/bin/head -n 1)"
-[ -n "$AVATAR_HISTORY" ]
-[ -s "$AVATAR_HISTORY/avatar-user.jpg" ]
-[ -s "$AVATAR_HISTORY/avatar-assistant.jpg" ]
-"$NODE" -e '
-  const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-  if (t.avatars?.user !== "avatar-user.jpg" || t.avatars?.assistant !== "avatar-assistant.jpg") process.exit(1);
-' "$AVATAR_STATE/theme/theme.json"
-HOME="$AVATAR_HOME" "$ROOT/scripts/customize-theme-macos.sh" \
-  --image "$ROOT/themes/builtin-miku-aqua/background.png" --name '头像移除测试' \
-  --clear-user-avatar --clear-assistant-avatar --no-apply >/dev/null
-[ ! -e "$AVATAR_STATE/theme/avatar-user.jpg" ]
-[ ! -e "$AVATAR_STATE/theme/avatar-assistant.jpg" ]
-"$NODE" -e '
-  const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-  if (t.avatars?.user !== null || t.avatars?.assistant !== null) process.exit(1);
-' "$AVATAR_STATE/theme/theme.json"
+if [ "$CODEX_RUNTIME_AVAILABLE" = "true" ]; then
+  AVATAR_HOME="$TMP/avatar-home"
+  HOME="$AVATAR_HOME" "$ROOT/scripts/customize-theme-macos.sh" \
+    --image "$ROOT/themes/builtin-miku-aqua/background.png" --name '头像上传测试' --background-name '测试背景' \
+    --user-avatar "$ROOT/themes/builtin-miku-aqua/background.png" --assistant-avatar "$ROOT/themes/builtin-miku-aqua/background.png" \
+    --save-theme --no-apply >/dev/null
+  AVATAR_STATE="$AVATAR_HOME/Library/Application Support/CodexDreamSkinStudio"
+  [ -s "$AVATAR_STATE/theme/avatar-user.jpg" ]
+  [ -s "$AVATAR_STATE/theme/avatar-assistant.jpg" ]
+  AVATAR_HISTORY="$(/usr/bin/find "$AVATAR_STATE/themes" -mindepth 1 -maxdepth 1 -type d | /usr/bin/head -n 1)"
+  [ -n "$AVATAR_HISTORY" ]
+  [ -s "$AVATAR_HISTORY/avatar-user.jpg" ]
+  [ -s "$AVATAR_HISTORY/avatar-assistant.jpg" ]
+  "$NODE" -e '
+    const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    if (t.avatars?.user !== "avatar-user.jpg" || t.avatars?.assistant !== "avatar-assistant.jpg") process.exit(1);
+  ' "$AVATAR_STATE/theme/theme.json"
+  HOME="$AVATAR_HOME" "$ROOT/scripts/customize-theme-macos.sh" \
+    --image "$ROOT/themes/builtin-miku-aqua/background.png" --name '头像移除测试' \
+    --clear-user-avatar --clear-assistant-avatar --no-apply >/dev/null
+  [ ! -e "$AVATAR_STATE/theme/avatar-user.jpg" ]
+  [ ! -e "$AVATAR_STATE/theme/avatar-assistant.jpg" ]
+  "$NODE" -e '
+    const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    if (t.avatars?.user !== null || t.avatars?.assistant !== null) process.exit(1);
+  ' "$AVATAR_STATE/theme/theme.json"
+fi
 
 "$NODE" "$ROOT/scripts/update-theme-preferences.mjs" effects --theme-dir "$TMP/theme" \
   --opacity 43 --blur 21.5 >/dev/null

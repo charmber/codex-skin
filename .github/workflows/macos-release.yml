@@ -36,6 +36,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export NODE="$(command -v node)"
+          export CODEX_DREAM_SKIN_SKIP_RUNTIME_TESTS=true
           ./macos/scripts/build-dmg.sh --unsigned
 
       - name: Upload workflow artifact

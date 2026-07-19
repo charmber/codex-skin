@@ -7,6 +7,10 @@
 - 原生菜单栏和 SwiftBar 菜单新增「打开主题商店」，默认跳转至 `https://skin.beanplay.cn`
 - 本地开发可通过 `CODEX_DREAM_SKIN_STORE_URL=http://127.0.0.1:5173` 临时覆盖商店地址
 
+### 修复
+
+- 修复 GitHub Actions 的干净 macOS Runner 因未安装官方 Codex 而无法执行静态测试和构建通用 DMG 的问题
+
 ### 说明
 
 - 主题商店只由用户点击后在默认浏览器打开，不会自动上传本地主题、账户或 API 配置
