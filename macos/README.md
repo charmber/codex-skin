@@ -105,7 +105,7 @@ Install location after step 2:
 
 Choose `打开主题工作室…` from the native `Skin` menu to create a complete theme. The editor exposes:
 
-Choose `打开主题商店…` to open <https://skin.beanplay.cn> in the default browser. Local development can override this destination with `CODEX_DREAM_SKIN_STORE_URL=http://127.0.0.1:5173`.
+Choose `打开主题商店…` to open <http://skin.beadplay.cn> in the default browser. Local development can override this destination with `CODEX_DREAM_SKIN_STORE_URL=http://127.0.0.1:5173`. The production store currently uses unencrypted HTTP; do not submit sensitive credentials through it.
 
 - Theme and background names, a live image preview, background picker, and layout theme.
 - All ten theme colors: page, two panels, two accents, secondary, highlight, primary/muted text, and borders.

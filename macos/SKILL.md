@@ -11,7 +11,7 @@ This file is an optional Codex capability entry. The delivery is a complete stan
 ## Workflow
 
 1. On macOS 13 or newer, install `Codex Dream Skin.app` from the DMG, open it once, and choose `初始化主题引擎` from the menu bar. The `.command` installer remains a compatibility fallback.
-2. Choose `打开主题工作室` from the menu bar to create a full theme, including its background, complete palette, copy, and reading effects. Use `打开主题商店` to browse <https://skin.beanplay.cn>, use `导入主题包` / `导出当前主题` for portable `.cds-theme.zip` packages, and `快速换背景图` only for a simple image replacement.
+2. Choose `打开主题工作室` from the menu bar to create a full theme, including its background, complete palette, copy, and reading effects. Use `打开主题商店` to browse <http://skin.beadplay.cn>, use `导入主题包` / `导出当前主题` for portable `.cds-theme.zip` packages, and `快速换背景图` only for a simple image replacement.
 3. Verify the live result with `Verify Codex Dream Skin.command`. A pass requires a visible native sidebar and composer, no horizontal overflow, non-interactive decoration, and—on the home route—a real banner, native cards, and project selector.
 4. Restore the official appearance from the menu bar or with `Restore Codex Dream Skin.command`.
 

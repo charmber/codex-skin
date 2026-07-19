@@ -11,10 +11,10 @@
 set +e
 
 ENGINE="${CODEX_DREAM_SKIN_ENGINE:-$HOME/.codex/codex-dream-skin-studio}"
-THEME_STORE_URL="${CODEX_DREAM_SKIN_STORE_URL:-https://skin.beanplay.cn}"
+THEME_STORE_URL="${CODEX_DREAM_SKIN_STORE_URL:-http://skin.beadplay.cn}"
 case "$THEME_STORE_URL" in
   http://*|https://*) ;;
-  *) THEME_STORE_URL="https://skin.beanplay.cn" ;;
+  *) THEME_STORE_URL="http://skin.beadplay.cn" ;;
 esac
 if [ ! -d "$ENGINE/scripts" ]; then
   HERE="$(cd "$(dirname "$0")" && pwd -P)"

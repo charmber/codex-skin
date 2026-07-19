@@ -65,7 +65,7 @@ MENU_OUTPUT="$(HOME="$TMP/home" CODEX_DREAM_SKIN_ENGINE="$ROOT" /bin/bash "$ROOT
 /usr/bin/grep -F '配色方案' <<<"$MENU_OUTPUT" >/dev/null
 /usr/bin/grep -F '导入主题包… | bash=' <<<"$MENU_OUTPUT" >/dev/null
 /usr/bin/grep -F '导出当前主题… | bash=' <<<"$MENU_OUTPUT" >/dev/null
-/usr/bin/grep -F '打开主题商店… | href="https://skin.beanplay.cn"' <<<"$MENU_OUTPUT" >/dev/null
+/usr/bin/grep -F '打开主题商店… | href="http://skin.beadplay.cn"' <<<"$MENU_OUTPUT" >/dev/null
 /usr/bin/grep -F '调整阅读区磨砂与透明度… | bash=' <<<"$MENU_OUTPUT" >/dev/null
 /usr/bin/grep -F '自定义顶部文字… | bash=' <<<"$MENU_OUTPUT" >/dev/null
 LOCAL_STORE_MENU="$(HOME="$TMP/home" CODEX_DREAM_SKIN_ENGINE="$ROOT" \
@@ -214,7 +214,7 @@ HOME="$LAYOUT_HOME" "$ROOT/scripts/switch-layout-macos.sh" --id qq-classic --no-
 /usr/bin/grep -F 'process.exit(process.exitCode ?? 0)' "$ROOT/scripts/injector.mjs" >/dev/null
 /usr/bin/grep -F '取消当前操作' "$ROOT/app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift" >/dev/null
 /usr/bin/grep -F 'CODEX_DREAM_SKIN_STORE_URL' "$ROOT/app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift" >/dev/null
-/usr/bin/grep -F 'https://skin.beanplay.cn' "$ROOT/app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift" >/dev/null
+/usr/bin/grep -F 'http://skin.beadplay.cn' "$ROOT/app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift" >/dev/null
 /usr/bin/grep -F 'openThemeStore' "$ROOT/app/Sources/CodexDreamSkinMenuBar/AppDelegate.swift" >/dev/null
 /usr/bin/grep -F 'scriptTimedOut' "$ROOT/app/Sources/CodexDreamSkinMenuBar/EngineController.swift" >/dev/null
 /usr/bin/grep -F 'dream-skin-project-button' "$ROOT/renderer/layouts/stage/renderer-inject.js" >/dev/null

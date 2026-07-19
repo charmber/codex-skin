@@ -45,7 +45,7 @@ One image, one mood. Real theme previews you can ship:
 
 Open `Skin → 打开主题工作室…` from the menu bar to create a complete theme. Continue from the active theme or choose `新建主题` to start with a clean configuration:
 
-The menu also includes `打开主题商店…`, which opens <https://skin.beanplay.cn> in the default browser for browsing, previewing, editing, and downloading community themes. The store opens only after an explicit click and never uploads local themes, account data, or API configuration in the background.
+The menu also includes `打开主题商店…`, which opens <http://skin.beadplay.cn> in the default browser for browsing, previewing, editing, and downloading community themes. The store opens only after an explicit click and never uploads local themes, account data, or API configuration in the background. The site currently uses unencrypted HTTP; do not submit passwords, tokens, or other sensitive information there.
 
 - Name the theme, choose and preview its background, then select either the Future Stage or Classic Blue QQ Workbench layout
 - Future Aqua, Night, and Sakura are palettes for one shared Stage layout; Classic Blue uses a separate three-pane renderer and default palette
@@ -149,6 +149,7 @@ More detail:
 - Does not touch the official install directory or code signature.
 - **Never** rewrites API keys, Base URLs, or model-provider settings.
 - The Theme Store opens only after a user click and never uploads local themes, account data, or API configuration automatically.
+- The Theme Store currently uses HTTP without transport encryption; do not submit sensitive credentials through it.
 
 ## License
 

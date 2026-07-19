@@ -1,10 +1,22 @@
 # Changelog
 
+## 1.11.1 — 2026-07-19
+
+### 修复
+
+- 主题商店默认地址修正为 `http://skin.beadplay.cn`，原生菜单栏、SwiftBar 与中英文文档保持一致
+
+### 说明
+
+- 当前主题商店使用 HTTP 明文传输，不提供 HTTPS 传输加密；请勿在站点中提交密码、令牌或其他敏感信息
+
+---
+
 ## 1.11.0 — 2026-07-18
 
 ### 新增
 
-- 原生菜单栏和 SwiftBar 菜单新增「打开主题商店」，默认跳转至 `https://skin.beanplay.cn`
+- 原生菜单栏和 SwiftBar 菜单新增「打开主题商店」，默认跳转至 `http://skin.beadplay.cn`
 - 本地开发可通过 `CODEX_DREAM_SKIN_STORE_URL=http://127.0.0.1:5173` 临时覆盖商店地址
 
 ### 修复

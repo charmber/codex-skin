@@ -18,7 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let shouldOpenThemeEditor = CommandLine.arguments.contains("--open-theme-editor") ||
         ProcessInfo.processInfo.environment["CODEX_DREAM_SKIN_OPEN_EDITOR"] == "1"
     private var themeStoreURL: URL {
-        let productionURL = URL(string: "https://skin.beanplay.cn")!
+        let productionURL = URL(string: "http://skin.beadplay.cn")!
         guard let configured = ProcessInfo.processInfo.environment["CODEX_DREAM_SKIN_STORE_URL"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
               !configured.isEmpty,
