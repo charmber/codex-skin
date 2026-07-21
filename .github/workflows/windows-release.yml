@@ -67,19 +67,24 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release view $env:GITHUB_REF_NAME *> $null
+          $releaseTag = if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $env:GITHUB_REF_NAME
+          } else {
+            "v$((Get-Content windows/VERSION -Raw).Trim())"
+          }
+          gh release view $releaseTag *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $env:GITHUB_REF_NAME --title "Codex Dream Skin $env:GITHUB_REF_NAME" --notes-file windows/RELEASE_NOTES.md
+            gh release create $releaseTag --title "Codex Dream Skin $releaseTag" --notes-file windows/RELEASE_NOTES.md
             if ($LASTEXITCODE -ne 0) {
               Start-Sleep -Seconds 5
-              gh release view $env:GITHUB_REF_NAME *> $null
-              if ($LASTEXITCODE -ne 0) { throw "Could not create or find release $env:GITHUB_REF_NAME" }
+              gh release view $releaseTag *> $null
+              if ($LASTEXITCODE -ne 0) { throw "Could not create or find release $releaseTag" }
             }
           }
-          gh release edit $env:GITHUB_REF_NAME --title "Codex Dream Skin $env:GITHUB_REF_NAME" --notes-file windows/RELEASE_NOTES.md
-          gh release upload $env:GITHUB_REF_NAME windows/release/*.exe windows/release/SHA256SUMS-Windows.txt --clobber
+          gh release edit $releaseTag --title "Codex Dream Skin $releaseTag" --notes-file windows/RELEASE_NOTES.md
+          gh release upload $releaseTag windows/release/*.exe windows/release/SHA256SUMS-Windows.txt --clobber
