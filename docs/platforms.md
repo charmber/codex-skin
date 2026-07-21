@@ -29,24 +29,28 @@
 | 用途 | 路径 |
 |------|------|
 | 源码（本整理包） | `Codex-Dream-Skin/windows/` |
-| 状态 / 日志 | `%LOCALAPPDATA%\CodexDreamSkin` |
+| 托盘应用 | `Codex Dream Skin.exe`（安装版或便携版） |
+| 主题 / 状态 / 日志 | `%LOCALAPPDATA%\CodexDreamSkinStudio` |
 | Codex 配置 | `%USERPROFILE%\.codex\config.toml` |
-| 默认 CDP 端口 | `9335`（Mac 包默认从 `9341` 起选空闲口） |
+| 默认 CDP 端口 | 从 `9341` 起动态选择空闲回环端口 |
 
 ## 能力矩阵
 
 | 功能 | macOS | Windows |
 |------|:-----:|:-------:|
-| 原生菜单栏应用 / DMG | ✅ macOS 13+ | ❌ |
+| 原生平台应用 | ✅ 菜单栏 / DMG | ✅ 托盘 / EXE |
 | 安装脚本 | ✅ | ✅ |
 | 启动 + 注入 | ✅ | ✅ |
 | 一键恢复 | ✅ | ✅ |
 | 实机 verify / 截图 | ✅ | ✅ |
-| 用户选图定制 | ✅ | ❌ |
-| 官方签名校验 | ✅ | 部分（Store 包发现） |
+| 用户选图定制 | ✅ | ✅ |
+| 完整主题工作室 | ✅ | ✅ |
+| 布局 / 配色 / 历史热切换 | ✅ | ✅ |
+| 主题包导入 / 导出 | ✅ | ✅ |
+| 官方应用发现 / 校验 | ✅ 签名校验 | ✅ Store 包动态发现 |
 | 客户部署提示词 | ✅ | ❌（可用 Mac 文案改写） |
-| 打客户 ZIP | ✅ `build-client-release.sh` | 手动压缩 `windows/` |
-| 自动发布安装包 | ✅ 标签触发 GitHub Actions | ❌ |
+| 用户发行包 | ✅ 通用 DMG | ✅ 安装版 / 便携版 EXE |
+| 自动发布安装包 | ✅ 标签构建 DMG | ✅ 标签构建安装版 / 便携版 EXE |
 
 ## 不要放进这个目录的东西
 

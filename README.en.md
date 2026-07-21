@@ -105,6 +105,10 @@ On macOS 13 or newer, the DMG app provides the native `Skin` menu without SwiftB
   <sub>Create, share, switch, pause, and restore themes from the native Skin menu</sub>
 </p>
 
+### Windows Tray App
+
+Starting with 1.11.2, Windows ships installer and portable EXE builds. The tray menu and Theme Studio expose the same layouts, palettes, backgrounds, avatars, effects, history, and portable theme packages. The EXE bundles its runtime, so a global Node.js installation is not required.
+
 
 ## What it does
 
@@ -114,7 +118,7 @@ On macOS 13 or newer, the DMG app provides the native `Skin` menu without SwiftB
 - **Reusable themes** — Every save creates a complete theme snapshot that can be loaded again from the menu.
 - **Portable theme packages** — Export a no-code theme ZIP that another user can import as a complete theme.
 - **Theme Store access** — Open the community theme site on demand without background uploads of local themes or account settings.
-- **Native menu bar** — The DMG app needs no SwiftBar for theme creation, switching, sharing, pausing, or restoring.
+- **Native platform controls** — The macOS menu bar and Windows tray cover theme creation, switching, sharing, pausing, and restoring.
 - **Quick background swap** — Drop in a new image without losing the selected palette.
 - **Restorable** — One-click restore to the stock look.
 - **Safer path** — Local-loopback CDP inject only. No official binary or signature changes.
@@ -122,6 +126,8 @@ On macOS 13 or newer, the DMG app provides the native `Skin` menu without SwiftB
 ## Quick start
 
 On macOS 13 or newer, download the DMG from [GitHub Releases](https://github.com/charmber/codex-skin/releases), drag the app into Applications, and open it once. The native `Skin` menu then appears in the menu bar with no SwiftBar dependency. Current releases are unsigned and not notarized; Control-click the app and choose **Open** on first launch. Do not disable Gatekeeper globally.
+
+On Windows 10/11 x64, download `Codex-Dream-Skin-Windows-*-x64.exe` from the same release. The regular build installs shortcuts; the build containing `portable` runs without installation. Current EXE builds are unsigned, so verify them against `SHA256SUMS-Windows.txt` in the release if SmartScreen reports an unknown publisher.
 
 Build a universal DMG from source:
 
@@ -134,12 +140,12 @@ Platform scripts remain available as compatibility entry points.
 | Platform | Dir | Entry |
 |------|------|------|
 | Apple Silicon / Intel Mac | [`macos/`](./macos/) | `Codex Dream Skin.app` from the DMG; `.command` scripts remain available |
-| Windows | [`windows/`](./windows/) | `scripts/install-dream-skin.ps1` → `start-dream-skin.ps1` |
+| Windows 10/11 x64 | [`windows/`](./windows/) | `Codex Dream Skin.exe` tray app; PowerShell scripts remain compatibility entry points |
 
 More detail:
 
 - Mac: [`macos/README.md`](./macos/README.md)
-- Windows: [`windows/SKILL.md`](./windows/SKILL.md)
+- Windows: [`windows/README.md`](./windows/README.md)
 - Paths: [`docs/platforms.md`](./docs/platforms.md)
 - Project notes: [`docs/PROJECT.md`](./docs/PROJECT.md)
 

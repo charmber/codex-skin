@@ -1,0 +1,72 @@
+{
+  "name": "codex-dream-skin-windows",
+  "version": "1.11.2",
+  "description": "Windows tray app and theme studio for Codex Dream Skin.",
+  "private": true,
+  "main": "src/main.js",
+  "author": "charmber <charmber@qq.com>",
+  "license": "MIT",
+  "repository": "https://github.com/charmber/codex-skin",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.js",
+    "prepare-icon": "node scripts/prepare-icon.mjs",
+    "build": "npm run test && npm run prepare-icon && electron-builder --win nsis portable --x64",
+    "build:dir": "npm run prepare-icon && electron-builder --win dir --x64"
+  },
+  "dependencies": {
+    "adm-zip": "0.6.0"
+  },
+  "devDependencies": {
+    "electron": "43.1.1",
+    "electron-builder": "26.15.3",
+    "sharp": "0.34.5"
+  },
+  "build": {
+    "appId": "cn.beadplay.codexdreamskin",
+    "productName": "Codex Dream Skin",
+    "artifactName": "Codex-Dream-Skin-Windows-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "../release",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "../../macos/VERSION", "to": "engine/VERSION" },
+      { "from": "../../macos/layouts", "to": "engine/layouts" },
+      { "from": "../../macos/palettes", "to": "engine/palettes" },
+      { "from": "../../macos/renderer", "to": "engine/renderer" },
+      { "from": "../../macos/schemas", "to": "engine/schemas" },
+      { "from": "../../macos/themes", "to": "engine/themes" },
+      {
+        "from": "../../macos/scripts",
+        "to": "engine/scripts",
+        "filter": ["injector.mjs", "theme-contract.mjs"]
+      },
+      { "from": "../../macos/LICENSE", "to": "LICENSE.txt" },
+      { "from": "../CHANGELOG.md", "to": "WINDOWS-CHANGELOG.md" }
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "win": {
+      "icon": "build/icon.png",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Codex Dream Skin",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "portable": {
+      "artifactName": "Codex-Dream-Skin-Windows-${version}-portable-${arch}.${ext}"
+    }
+  }
+}

@@ -1,9 +1,10 @@
 # Runtime notes
 
-- The skin launches the Store-installed `ChatGPT.exe` with `--remote-debugging-port=<port>` and injects through CDP.
-- The default production port is `9335`; test instances may use another port plus an isolated `--user-data-dir`.
-- CDP is bound to loopback. Do not expose it on a LAN interface.
-- The injector polls page targets and reinjects after document loads. In-page route changes use a debounced observer plus a low-frequency safety check to avoid CPU churn during streamed tasks.
-- `%LOCALAPPDATA%\CodexDreamSkin\state.json` records the port and daemon PID. Logs stay in the same directory.
-- If Codex is already running without the chosen debugging port, close it first or explicitly use `-RestartExisting`.
-- Store updates are supported because the launcher queries `Get-AppxPackage OpenAI.Codex` on every launch.
+- The tray EXE discovers the current Store-installed `ChatGPT.exe`, launches it with an explicit `--remote-debugging-address=127.0.0.1`, and injects through CDP.
+- Production starts searching for an available loopback port at `9341`; the selected port is shared by apply, verify, pause, and restore operations.
+- If Codex is already running without CDP, the tray app asks before restarting. It never silently terminates the user's session.
+- The injector polls verified Codex renderer targets and reinjects after document loads and route changes.
+- `%LOCALAPPDATA%\CodexDreamSkinStudio\state.json` records the port and watcher PID. Only a PID whose command line still contains this engine's `injector.mjs --watch` is eligible for termination.
+- Themes, history, backgrounds, and logs remain under `%LOCALAPPDATA%\CodexDreamSkinStudio`; uninstalling the EXE does not delete them by default.
+- Store updates are supported because the launcher queries `Get-AppxPackage OpenAI.Codex` on each full launch instead of persisting a versioned `WindowsApps` path.
+- `scripts/*.ps1` and `%LOCALAPPDATA%\CodexDreamSkin` describe the legacy single-theme compatibility path, not the current EXE runtime.

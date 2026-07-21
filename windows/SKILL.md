@@ -5,15 +5,15 @@ description: Apply, launch, verify, repair, update, or restore a full decorative
 
 # Codex Dream Skin
 
-Apply a reversible renderer skin through Chromium DevTools Protocol while launching the official Store-installed Codex executable. Never replace or take ownership of files under `WindowsApps`.
+Apply a reversible renderer skin through Chromium DevTools Protocol while launching the official Store-installed Codex executable. The 1.11.2+ Windows tray EXE is the primary user entry point; PowerShell scripts remain for legacy single-theme compatibility. Never replace or take ownership of files under `WindowsApps`.
 
 ## Workflow
 
-1. Run `scripts/install-dream-skin.ps1` once to set the matching official base colors and create launch/restore shortcuts.
-2. Run `scripts/start-dream-skin.ps1`. Add `-RestartExisting` only when the user authorized restarting an already-open Codex app.
-3. Run `scripts/verify-dream-skin.ps1 -ScreenshotPath <absolute-path>` after launch. Treat a missing hero, native composer, sidebar skin, or injection marker as failure. The native suggestion count is responsive and may be two to four.
-4. Inspect the screenshot against `references/qa-inventory.md`. Verify both the home screen and a normal task before signing off.
-5. Run `scripts/restore-dream-skin.ps1` for live removal. Add `-Uninstall` to delete shortcuts; add `-RestoreBaseTheme` when the user also wants the pre-install config backup restored.
+1. Prefer the GitHub Release EXE documented in `README.md`. Open Theme Studio from the tray icon and use **保存并应用**.
+2. If Codex is already running without CDP, restart it only after the app's explicit confirmation prompt.
+3. Use layout, palette, background, history, import/export, pause, and restore actions from the tray menu. User state lives under `%LOCALAPPDATA%\CodexDreamSkinStudio`.
+4. For legacy script QA, run `scripts/start-dream-skin.ps1` and then `scripts/verify-dream-skin.ps1 -ScreenshotPath <absolute-path>`.
+5. Inspect real home and task screens against `references/qa-inventory.md`; never sign off from the Theme Studio preview alone.
 
 ## Guardrails
 
@@ -24,7 +24,9 @@ Apply a reversible renderer skin through Chromium DevTools Protocol while launch
 - Keep decorative layers `pointer-events: none` and keep real buttons, navigation, and composer above them.
 - On app updates, rerun install and launch; the scripts discover the current Appx package dynamically.
 - If port `9335` is occupied, choose another port consistently for start, verify, and restore.
-- Keep the injection daemon running for navigation/reload resilience. Its state and logs live under `%LOCALAPPDATA%\CodexDreamSkin`.
+- Keep the injection daemon running for navigation/reload resilience. EXE state and logs live under `%LOCALAPPDATA%\CodexDreamSkinStudio`; `%LOCALAPPDATA%\CodexDreamSkin` is legacy-script state.
+- Treat imported `.cds-theme.zip` files as declarative data only. Do not relax the EXE's path, size, symlink, unreferenced-file, or executable-content checks.
+- Do not force `appearanceTheme` during install; renderer CSS handles the active light/dark shell.
 
 ## Resources
 
@@ -34,3 +36,6 @@ Apply a reversible renderer skin through Chromium DevTools Protocol while launch
 - `assets/dream-reference.png`: user-provided visual reference used only in cropped decorative regions.
 - `references/qa-inventory.md`: required functional and visual signoff coverage.
 - `references/runtime-notes.md`: troubleshooting and update behavior.
+- `app/`: Electron tray app, Theme Studio, package validation, tests, and EXE build configuration.
+- `README.md`: current Windows installation, storage, build, and security documentation.
+- `CHANGELOG.md`: user-facing Windows release notes.

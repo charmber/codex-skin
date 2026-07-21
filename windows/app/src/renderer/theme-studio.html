@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'">
+  <title>Codex Dream Skin 主题工作室</title>
+  <link rel="stylesheet" href="theme-studio.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-mark" aria-hidden="true">&lt;/&gt;</div>
+    <div class="brand-copy">
+      <h1>Codex Dream Skin</h1>
+      <p>Windows 主题工作室 <span id="version"></span></p>
+    </div>
+    <div class="header-actions">
+      <span id="engine-status" class="status-pill">读取状态</span>
+      <button id="open-images" class="button button-quiet" type="button">背景文件夹</button>
+      <button id="apply-current" class="button button-secondary" type="button">应用当前主题</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="studio-nav" aria-label="主题设置分类">
+      <button class="nav-item active" type="button" data-tab="identity">主题</button>
+      <button class="nav-item" type="button" data-tab="colors">颜色</button>
+      <button class="nav-item" type="button" data-tab="copy">文案</button>
+      <button class="nav-item" type="button" data-tab="avatars">头像</button>
+      <button class="nav-item" type="button" data-tab="effects">界面效果</button>
+      <button class="nav-item" type="button" data-tab="components">布局组件</button>
+      <div class="nav-spacer"></div>
+      <button id="new-theme" class="nav-item nav-command" type="button">新建主题</button>
+      <button id="open-logs" class="nav-item nav-command" type="button">日志文件夹</button>
+    </aside>
+
+    <section class="editor">
+      <div class="editor-scroll">
+        <section class="tab-panel active" data-panel="identity">
+          <div class="section-heading">
+            <h2>主题</h2>
+            <span id="save-state">已载入当前主题</span>
+          </div>
+          <div class="identity-grid">
+            <div class="preview-panel">
+              <div class="background-preview" id="background-preview">
+                <span id="background-empty">未选择背景</span>
+                <img id="background-image" alt="主题背景预览">
+                <div class="preview-chrome">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="preview-sidebar"></div>
+                <div class="preview-content">
+                  <strong id="preview-title">Codex Dream Skin</strong>
+                  <small id="preview-subtitle">DREAM SKIN ONLINE</small>
+                </div>
+              </div>
+              <button id="choose-background" class="button button-secondary full" type="button">选择背景图片</button>
+            </div>
+            <div class="form-stack">
+              <label class="field">
+                <span>主题名称</span>
+                <input id="name" type="text" maxlength="80" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>背景名称</span>
+                <input id="background-name" type="text" maxlength="80" autocomplete="off">
+              </label>
+              <fieldset class="field-group">
+                <legend>布局主题</legend>
+                <div class="segmented" id="layout-options"></div>
+              </fieldset>
+              <label class="field">
+                <span>配色名称</span>
+                <input id="palette-name" type="text" maxlength="80" autocomplete="off">
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="colors">
+          <div class="section-heading"><h2>颜色</h2><span>10 项主题配色</span></div>
+          <div class="color-grid" id="color-grid"></div>
+        </section>
+
+        <section class="tab-panel" data-panel="copy">
+          <div class="section-heading"><h2>文案</h2><span>留空即可隐藏</span></div>
+          <div class="form-grid two-columns">
+            <label class="field"><span>品牌副标题</span><input id="brand-subtitle" maxlength="80"></label>
+            <label class="field"><span>首页状态</span><input id="status-text" maxlength="80"></label>
+            <label class="field wide"><span>首页说明</span><input id="tagline" maxlength="160"></label>
+            <label class="field"><span>项目区域前缀</span><input id="project-prefix" maxlength="80"></label>
+            <label class="field"><span>项目按钮</span><input id="project-label" maxlength="80"></label>
+            <label class="field wide"><span>主题短句</span><input id="quote" maxlength="80"></label>
+            <label class="field"><span>顶部标题</span><input id="header-title" maxlength="80"></label>
+            <label class="field"><span>顶部副标题</span><input id="header-subtitle" maxlength="80"></label>
+            <label class="field wide"><span>顶部状态</span><input id="header-status" maxlength="80"></label>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="avatars">
+          <div class="section-heading"><h2>对话头像</h2><span>我的提问 / Codex 回答</span></div>
+          <div class="avatar-grid">
+            <div class="avatar-editor">
+              <div class="avatar-preview"><img id="user-avatar-image" alt="我的提问头像"><span id="user-avatar-empty">我</span></div>
+              <strong>我的提问</strong>
+              <span id="user-avatar-path" class="asset-path">未设置</span>
+              <div class="inline-actions">
+                <button class="button button-secondary" id="choose-user-avatar" type="button">选择</button>
+                <button class="button button-quiet" id="remove-user-avatar" type="button">移除</button>
+              </div>
+            </div>
+            <div class="avatar-editor">
+              <div class="avatar-preview"><img id="assistant-avatar-image" alt="Codex 回答头像"><span id="assistant-avatar-empty">C</span></div>
+              <strong>Codex 回答</strong>
+              <span id="assistant-avatar-path" class="asset-path">未设置</span>
+              <div class="inline-actions">
+                <button class="button button-secondary" id="choose-assistant-avatar" type="button">选择</button>
+                <button class="button button-quiet" id="remove-assistant-avatar" type="button">移除</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="effects">
+          <div class="section-heading"><h2>界面效果</h2><span>任务阅读区</span></div>
+          <div class="slider-stack">
+            <label class="slider-field">
+              <span><strong>阅读区不透明度</strong><output id="opacity-value">76%</output></span>
+              <input id="task-opacity" type="range" min="0" max="100" step="1">
+            </label>
+            <label class="slider-field">
+              <span><strong>磨砂模糊</strong><output id="blur-value">14 px</output></span>
+              <input id="task-blur" type="range" min="0" max="40" step="1">
+            </label>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="components">
+          <div class="section-heading"><h2>布局组件</h2><span id="component-layout-label">经典蓝 QQ 工作台</span></div>
+          <div class="toggle-grid">
+            <label class="toggle"><input id="retro-header" type="checkbox"><span>双层标题区</span></label>
+            <label class="toggle"><input id="toolbar" type="checkbox"><span>快捷工具栏</span></label>
+            <label class="toggle"><input id="three-pane" type="checkbox"><span>三栏摘要</span></label>
+            <label class="toggle"><input id="auto-summary" type="checkbox"><span>自动打开摘要</span></label>
+            <label class="toggle"><input id="companion" type="checkbox"><span>Codex 伙伴卡</span></label>
+            <label class="toggle"><input id="profile-card" type="checkbox"><span>在线资料卡</span></label>
+            <label class="toggle"><input id="home-pet" type="checkbox"><span>首页角色</span></label>
+          </div>
+          <div class="form-grid two-columns component-fields">
+            <label class="field"><span>三栏最小宽度</span><input id="layout-min-width" type="number" min="1080" max="2400" step="10"></label>
+            <label class="field"><span>右栏宽度</span><input id="layout-right-width" type="number" min="272" max="420" step="4"></label>
+            <label class="field"><span>窗口标题</span><input id="layout-window-title" maxlength="60"></label>
+            <label class="field"><span>资料卡名称</span><input id="layout-profile-name" maxlength="48"></label>
+            <label class="field"><span>资料卡状态</span><input id="layout-profile-status" maxlength="32"></label>
+            <label class="field"><span>伙伴卡标题</span><input id="layout-companion-title" maxlength="48"></label>
+            <label class="field wide"><span>伙伴卡状态</span><input id="layout-companion-status" maxlength="64"></label>
+          </div>
+        </section>
+      </div>
+
+      <footer class="editor-footer">
+        <span id="footer-status" role="status">就绪</span>
+        <div class="footer-actions">
+          <button id="save-only" class="button button-secondary" type="button">保存主题</button>
+          <button id="save-apply" class="button button-primary" type="button">保存并应用</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+  <script src="theme-studio.js"></script>
+</body>
+</html>

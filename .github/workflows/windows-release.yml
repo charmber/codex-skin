@@ -1,0 +1,85 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-2025
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: windows/app/package-lock.json
+
+      - name: Validate release version
+        shell: pwsh
+        run: |
+          $version = (Get-Content windows/VERSION -Raw).Trim()
+          if (-not $version) { throw 'windows/VERSION is empty' }
+          $packageVersion = (Get-Content windows/app/package.json -Raw | ConvertFrom-Json).version
+          if ($packageVersion -ne $version) { throw "package.json $packageVersion does not match windows/VERSION $version" }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME.TrimStart('v') -ne $version) {
+            throw "Tag $env:GITHUB_REF_NAME does not match windows/VERSION $version"
+          }
+
+      - name: Install dependencies
+        working-directory: windows/app
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit production dependencies
+        working-directory: windows/app
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Test and build EXE packages
+        working-directory: windows/app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run build
+
+      - name: Write SHA-256 checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem windows/release/*.exe | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content windows/release/SHA256SUMS-Windows.txt -Encoding ascii
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Codex-Dream-Skin-Windows
+          path: |
+            windows/release/*.exe
+            windows/release/SHA256SUMS-Windows.txt
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME --title "Codex Dream Skin $env:GITHUB_REF_NAME" --notes-file windows/RELEASE_NOTES.md
+            if ($LASTEXITCODE -ne 0) {
+              Start-Sleep -Seconds 5
+              gh release view $env:GITHUB_REF_NAME *> $null
+              if ($LASTEXITCODE -ne 0) { throw "Could not create or find release $env:GITHUB_REF_NAME" }
+            }
+          }
+          gh release edit $env:GITHUB_REF_NAME --title "Codex Dream Skin $env:GITHUB_REF_NAME" --notes-file windows/RELEASE_NOTES.md
+          gh release upload $env:GITHUB_REF_NAME windows/release/*.exe windows/release/SHA256SUMS-Windows.txt --clobber

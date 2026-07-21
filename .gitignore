@@ -2,6 +2,12 @@
 *.log
 *.tmp
 .DS_Store
+windows/app/node_modules/
+windows/release/
+windows/app/build/icon.png
+windows/app/build/icon.ico
+output/playwright/
+.playwright-cli/
 .idea/
 .vscode/
 README.preview.html

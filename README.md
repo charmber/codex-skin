@@ -105,6 +105,10 @@ macOS 13 或更高版本安装 DMG 后，无需 SwiftBar 即可从原生 `Skin` 
   <sub>主题创作、分享、切换和恢复入口集中在原生 Skin 菜单</sub>
 </p>
 
+### Windows 托盘应用
+
+Windows 版从 1.11.2 起提供安装版与便携版 EXE。托盘菜单和主题工作室补齐同一套布局、配色、背景、头像、界面效果、历史主题与主题包能力；EXE 自带运行时，不要求全局安装 Node.js。
+
 
 ## 它能做什么
 
@@ -116,13 +120,15 @@ macOS 13 或更高版本安装 DMG 后，无需 SwiftBar 即可从原生 `Skin` 
 - **可保存再切换**：每次保存都会生成带关联背景的独立主题，之后可从历史组合重新载入
 - **可分享主题包**：导出一个无可执行代码的主题 ZIP，其他用户导入即可添加完整主题
 - **主题商店入口**：按需在浏览器打开社区主题站点，不会在后台上传本地主题或账户配置
-- **原生菜单栏**：DMG 版无需 SwiftBar，即可完成主题创作、切换、分享、暂停和恢复
+- **原生平台入口**：macOS 菜单栏和 Windows 托盘都可完成主题创作、切换、分享、暂停和恢复
 - **可恢复**：一键还原官方外观
 - **相对安全**：本机回环 CDP 注入，不改官方二进制与签名
 
 ## 快速开始
 
 macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/charmber/codex-skin/releases) 下载 DMG，拖入「应用程序」后首次打开一次，右上角会出现原生 `Skin` 菜单。无需安装 SwiftBar。当前 Release 为未经 Apple 公证的 unsigned 构建，首次启动请按住 Control 点击应用并选择「打开」；不要全局关闭 Gatekeeper。
+
+Windows 10/11 x64 可从同一 Release 下载 `Codex-Dream-Skin-Windows-*-x64.exe`。安装版会创建快捷方式；文件名包含 `portable` 的版本可直接运行。当前 EXE 未签名，SmartScreen 可能显示“未知发布者”，请核对 Release 中的 `SHA256SUMS-Windows.txt`。
 
 **1.安装包安装：**
 
@@ -151,12 +157,12 @@ macOS 13 或更高版本推荐直接从 [GitHub Releases](https://github.com/cha
 | 平台 | 目录 | 入口 |
 |------|------|------|
 | Apple Silicon / Intel Mac | [`macos/`](./macos/) | DMG 中的 `Codex Dream Skin.app`；兼容入口为 `.command` 脚本 |
-| Windows | [`windows/`](./windows/) | `scripts/install-dream-skin.ps1` → `start-dream-skin.ps1` |
+| Windows 10/11 x64 | [`windows/`](./windows/) | `Codex Dream Skin.exe` 托盘应用；PowerShell 脚本为兼容入口 |
 
 更细的说明：
 
 - Mac：[`macos/README.md`](./macos/README.md)
-- Windows：[`windows/SKILL.md`](./windows/SKILL.md)
+- Windows：[`windows/README.md`](./windows/README.md)
 - 路径对照：[`docs/platforms.md`](./docs/platforms.md)
 - 项目记录：[`docs/PROJECT.md`](./docs/PROJECT.md)
 
