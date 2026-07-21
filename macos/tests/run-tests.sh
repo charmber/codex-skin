@@ -60,6 +60,17 @@ fi
 TMP="$(/usr/bin/mktemp -d /tmp/codex-dream-skin-tests.XXXXXX)"
 trap '/bin/rm -rf "$TMP"' EXIT
 /bin/mkdir -p "$TMP/home"
+STATE_FIELD_HOME="$TMP/state-field-home"
+/bin/mkdir -p "$STATE_FIELD_HOME/Library/Application Support/CodexDreamSkinStudio"
+/usr/bin/printf '%s\n' '{"port":9341,"enabled":true}' \
+  > "$STATE_FIELD_HOME/Library/Application Support/CodexDreamSkinStudio/state.json"
+env -i HOME="$STATE_FIELD_HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin LANG=zh_CN.UTF-8 \
+  /bin/bash -c '
+    . "$1/scripts/common-macos.sh"
+    [ -z "${NODE:-}" ]
+    [ "$(state_field port)" = "9341" ]
+    [ "$(state_field enabled)" = "true" ]
+  ' _ "$ROOT"
 MENU_OUTPUT="$(HOME="$TMP/home" CODEX_DREAM_SKIN_ENGINE="$ROOT" /bin/bash "$ROOT/menubar/codex_dream_skin.10s.sh")"
 /usr/bin/grep -F '布局主题' <<<"$MENU_OUTPUT" >/dev/null
 /usr/bin/grep -F '配色方案' <<<"$MENU_OUTPUT" >/dev/null

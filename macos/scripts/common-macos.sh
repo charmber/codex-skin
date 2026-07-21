@@ -270,11 +270,7 @@ wait_for_cdp() {
 
 state_field() {
   local key="$1"
-  "$NODE" -e '
-    const fs = require("node:fs");
-    const value = JSON.parse(fs.readFileSync(process.argv[1], "utf8"))[process.argv[2]];
-    if (value !== undefined && value !== null) process.stdout.write(String(value));
-  ' "$STATE_PATH" "$key"
+  /usr/bin/plutil -extract "$key" raw -o - "$STATE_PATH"
 }
 
 write_state() {
