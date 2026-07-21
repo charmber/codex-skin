@@ -219,7 +219,11 @@ async function save(applyImmediately) {
     const data = await window.dreamSkin.load();
     choices = data.choices;
     populate(data.theme);
-    setStatus(applyImmediately && result.applied === false ? "主题已保存，已取消应用" : applyImmediately ? "主题已保存并应用" : "主题已保存", "success");
+    if (result.applyError) {
+      setStatus(`主题已保存，但应用失败：${result.applyError}`, "error");
+    } else {
+      setStatus(applyImmediately && result.applied === false ? "主题已保存，已取消应用" : applyImmediately ? "主题已保存并应用" : "主题已保存", "success");
+    }
     $("#save-state").textContent = "已保存";
   } catch (error) {
     setStatus(error.message || String(error), "error");

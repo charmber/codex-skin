@@ -35,11 +35,15 @@ test("Windows theme state supports save, palette switch, export, and import", as
     name: "Windows 测试主题",
     paletteName: "测试配色",
     imagePath: initial.imageAsset.path,
-    userAvatarPath: null,
-    assistantAvatarPath: null,
+    userAvatarPath: initial.imageAsset.path,
+    assistantAvatarPath: initial.imageAsset.path,
   });
   assert.equal(saved.name, "Windows 测试主题");
   assert.match(saved.id, /^custom-/);
+  assert.equal(saved.avatars.user, "avatar-user.png");
+  assert.equal(saved.avatars.assistant, "avatar-assistant.png");
+  assert.ok(await fs.stat(path.join(first.activeDir, saved.avatars.user)).then((stat) => stat.size > 0));
+  assert.ok(await fs.stat(path.join(first.activeDir, saved.avatars.assistant)).then((stat) => stat.size > 0));
 
   const switched = await first.switchPalette("miku-sakura");
   assert.equal(switched.paletteId, "miku-sakura");
@@ -68,4 +72,17 @@ test("Windows theme state supports save, palette switch, export, and import", as
   nestedZip.addFile("nested/", Buffer.alloc(0));
   nestedZip.writeZip(nestedArchive);
   await assert.rejects(() => second.importPackage(nestedArchive), /不支持的目录/);
+});
+
+test("shared renderers use a slash-safe home suggestions selector", async () => {
+  const files = [
+    path.join(engineRoot, "renderer", "layouts", "stage", "renderer-inject.js"),
+    path.join(engineRoot, "renderer", "layouts", "qq-classic", "qq-classic-renderer.js"),
+    path.join(engineRoot, "scripts", "injector.mjs"),
+  ];
+  for (const file of files) {
+    const source = await fs.readFile(file, "utf8");
+    assert.match(source, /\[class~=["']group\/home-suggestions["']\]/, file);
+    assert.doesNotMatch(source, /\.group\\\\+\/home-suggestions/, file);
+  }
 });

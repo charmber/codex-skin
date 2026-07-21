@@ -490,9 +490,18 @@ function registerIpc() {
   ipcMain.handle("studio:choose-avatar", (_event, role) => selectImage(role === "user" ? "选择我的提问头像" : "选择 Codex 回答头像", 4 * 1024 * 1024));
   ipcMain.handle("studio:save", async (_event, draft, applyImmediately) => {
     const theme = await themeService.saveDraft(draft);
-    const applied = applyImmediately ? await applySkin() : null;
+    let applied = null;
+    let applyError = null;
+    if (applyImmediately) {
+      try {
+        applied = await applySkin();
+      } catch (error) {
+        applied = false;
+        applyError = error?.message || String(error);
+      }
+    }
     await rebuildTrayMenu();
-    return { theme, applied };
+    return { theme, applied, applyError };
   });
   ipcMain.handle("studio:apply", async () => {
     const applied = await applySkin();

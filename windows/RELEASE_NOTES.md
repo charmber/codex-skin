@@ -1,15 +1,14 @@
-# Codex Dream Skin 1.11.2
+# Codex Dream Skin 1.11.3
 
 ## Windows
 
-- 首个功能对齐 macOS 1.11 系列的 Windows 托盘 EXE：应用/暂停/恢复、开机启动、主题商店和运行状态集中管理
-- 完整主题工作室：未来舞台与经典蓝 QQ 工作台、配色、背景、文案、双头像、阅读区效果和布局组件
-- 支持热切换、历史主题以及跨平台 `.cds-theme.zip` 导入导出
-- 提供安装版与便携版 EXE，以及 `SHA256SUMS-Windows.txt`
+- 修复设置提问/回答头像后保存并应用时，聊天页可能提示 `Renderer evaluation failed: SyntaxError` 的问题
+- 保存成功但即时应用失败时，现在会保留主题并显示准确的应用错误，不再误报为保存失败
+- 提供安装版与便携版 x64 EXE，以及 `SHA256SUMS-Windows.txt`
 
 ## macOS
 
-- 修复原生菜单栏在图形环境未提供 `NODE` 变量时，“应用皮肤”可能立即报退出码 1 的问题
+- 同步修复未来舞台布局的首页建议区选择器，避免部分 DOM 状态下热应用失败
 
 ## 安全边界
 
