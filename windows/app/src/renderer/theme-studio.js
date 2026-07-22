@@ -1,7 +1,8 @@
 const colorFields = [
   ["background", "页面底色"], ["panel", "主面板"], ["panelAlt", "次面板"],
   ["accent", "主强调色"], ["accentAlt", "辅强调色"], ["secondary", "次要色"],
-  ["highlight", "高亮色"], ["text", "主文字"], ["muted", "次文字"],
+  ["highlight", "高亮色"], ["text", "主文字"], ["conversationText", "聊天记录文字"],
+  ["muted", "次文字"],
 ];
 
 const defaults = {
@@ -22,7 +23,7 @@ const defaults = {
   colors: {
     background: "#071116", panel: "#0b1a20", panelAlt: "#10272c", accent: "#39c5bb",
     accentAlt: "#68e3d9", secondary: "#58c9ee", highlight: "#ff6f91", text: "#f2fff7",
-    muted: "#a7c2ba", line: "rgba(57, 197, 187, 0.30)",
+    conversationText: "#f2fff7", muted: "#a7c2ba", line: "rgba(57, 197, 187, 0.30)",
   },
   layoutComponents: {
     retroHeader: true, toolbar: true, threePane: true, autoOpenSummary: true, companion: true,

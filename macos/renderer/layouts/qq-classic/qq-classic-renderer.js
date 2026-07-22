@@ -10,6 +10,7 @@
   const RETRO_SHELL_ID = "codex-qq-skin-retro-shell";
   const RETRO_PROFILE_ID = "codex-qq-skin-retro-profile";
   const SHELL_ATTR = "data-dream-shell";
+  const PLATFORM_ATTR = "data-dream-platform";
   const ART_ATTRS = [
     "data-dream-art-wide", "data-dream-art-safe", "data-dream-task-mode",
     "data-dream-art-safe-area", "data-dream-art-task-mode", "data-dream-art-aspect",
@@ -27,7 +28,7 @@
   const ANALYSIS_CACHE_KEY = "__CODEX_QQ_SKIN_ANALYSIS_CACHE__";
   const THEME_VARIABLES = [
     "--ds-bg", "--ds-panel", "--ds-panel-2", "--ds-green", "--ds-lime",
-    "--ds-cyan", "--ds-purple", "--ds-text", "--ds-muted", "--ds-line",
+    "--ds-cyan", "--ds-purple", "--ds-text", "--ds-conversation-text", "--ds-muted", "--ds-line",
     "--ds-bg-rgb", "--ds-panel-rgb", "--ds-panel-2-rgb", "--ds-accent-rgb",
     "--ds-accent-alt-rgb", "--ds-secondary-rgb", "--ds-highlight-rgb",
     "--ds-text-rgb", "--ds-muted-rgb", "--ds-line-rgb",
@@ -194,6 +195,20 @@
     return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
   };
 
+  const detectPlatform = () => {
+    const parts = [
+      navigator.userAgentData?.platform,
+      navigator.platform,
+      navigator.userAgent,
+    ].filter((value) => typeof value === "string" && value.trim());
+    const platform = parts.join(" ").toLowerCase();
+    if (platform.includes("win")) return "windows";
+    if (platform.includes("mac")) return "macos";
+    if (platform.includes("linux")) return "linux";
+    return "unknown";
+  };
+  const runtimePlatform = detectPlatform();
+
   /** Detect Codex app light/dark shell for CSS branching. */
   const detectShellMode = () => {
     const root = document.documentElement;
@@ -345,6 +360,7 @@
       "--ds-cyan": pick("secondary"),
       "--ds-purple": pick("highlight"),
       "--ds-text": pick("text"),
+      "--ds-conversation-text": typeof colors.conversationText === "string" ? colors.conversationText : pick("text"),
       "--ds-muted": pick("muted"),
       "--ds-line": explicit.has("line") && typeof colors.line === "string" ? colors.line : adaptive.line,
     };
@@ -837,6 +853,13 @@
     selected.sort((left, right) => left.getBoundingClientRect().x - right.getBoundingClientRect().x);
     const host = retroShellParts?.controls;
     if (!host?.dataset || typeof host.replaceChildren !== "function") return;
+    if (runtimePlatform === "windows") {
+      if (host.dataset.controlSignature !== "platform-windows" || host.childElementCount) {
+        host.replaceChildren();
+        host.dataset.controlSignature = "platform-windows";
+      }
+      return;
+    }
     const signature = selected.map((button) => button.getAttribute("aria-label") || "").join("|");
     if (host.dataset.controlSignature === signature) return;
     host.replaceChildren();
@@ -854,8 +877,8 @@
     }
   };
 
-  const ensureRetroProfile = () => {
-    if (COMPONENTS.profileCard === false) {
+  const ensureRetroProfile = (enabled = true) => {
+    if (!enabled || COMPONENTS.profileCard === false) {
       document.getElementById(RETRO_PROFILE_ID)?.remove();
       document.querySelectorAll(".dream-retro-profile-host").forEach((node) =>
         node.classList.remove("dream-retro-profile-host"));
@@ -967,6 +990,7 @@
     ensureStyle(root);
     const shell = resolvedShell();
     setAttribute(root, SHELL_ATTR, shell);
+    setAttribute(root, PLATFORM_ATTR, runtimePlatform);
     setStyleProperty(root, "--qq-skin-art", `url("${artUrl}")`);
     setStyleProperty(root, "--dream-retro-frame", `url("${retroFrameUrl}")`);
     applyTheme(root, shell);
@@ -983,6 +1007,13 @@
     if (!root) return;
     shell ||= root.getAttribute(SHELL_ATTR) || resolvedShell();
     const shellMain = document.querySelector("main.main-surface") || document.querySelector("main");
+    const settingsRoute = [...document.querySelectorAll('input[placeholder]')].some((input) => {
+      const placeholder = input.getAttribute("placeholder") || "";
+      if (!/(settings|设置|設定)/i.test(placeholder)) return false;
+      if (typeof input.getBoundingClientRect !== "function") return false;
+      const box = input.getBoundingClientRect();
+      return box.width > 120 && box.height > 12;
+    });
     const homeIndicator = document.querySelector('[data-testid="home-icon"]');
     const home = homeIndicator?.closest('[role="main"]') ||
       [...document.querySelectorAll('[role="main"]')].find((candidate) =>
@@ -1004,7 +1035,7 @@
     ensureRetroShell();
     syncRetroToolbarActions();
     syncRetroWindowControls();
-    ensureRetroProfile();
+    ensureRetroProfile(!settingsRoute);
     markChatAvatars();
     if (observedShellMain !== shellMain) {
       resizeObserver?.disconnect();
@@ -1022,13 +1053,6 @@
       (!leftSidebarToggle && Boolean(document.querySelector("aside.app-shell-left-panel")));
     const summaryToggle = findPinnedSummaryToggle();
     const wideEnough = window.innerWidth >= layoutMinWidth;
-    const settingsRoute = [...document.querySelectorAll('input[placeholder]')].some((input) => {
-      const placeholder = input.getAttribute("placeholder") || "";
-      if (!/(settings|设置|設定)/i.test(placeholder)) return false;
-      if (typeof input.getBoundingClientRect !== "function") return false;
-      const box = input.getBoundingClientRect();
-      return box.width > 120 && box.height > 12;
-    });
     const taskRoute = !settingsRoute && Boolean(shellMain);
     setAttribute(root, "data-dream-task-route", taskRoute ? "true" : "false");
     const layoutBaseEligible = layoutMode === "classic-three-pane" &&
@@ -1148,6 +1172,7 @@
     window[DISABLED_KEY] = true;
     document.documentElement?.classList.remove("codex-qq-skin");
     document.documentElement?.removeAttribute(SHELL_ATTR);
+    document.documentElement?.removeAttribute(PLATFORM_ATTR);
     document.documentElement?.removeAttribute("data-qq-retro-header");
     document.documentElement?.removeAttribute("data-qq-toolbar");
     for (const name of ART_ATTRS) document.documentElement?.removeAttribute(name);

@@ -1,6 +1,6 @@
 {
   "name": "codex-dream-skin-windows",
-  "version": "1.11.3",
+  "version": "1.11.5",
   "description": "Windows tray app and theme studio for Codex Dream Skin.",
   "private": true,
   "main": "src/main.js",

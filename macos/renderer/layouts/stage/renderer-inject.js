@@ -10,7 +10,7 @@
   const THEME = themeConfig && typeof themeConfig === "object" ? themeConfig : {};
   const THEME_VARIABLES = [
     "--ds-bg", "--ds-panel", "--ds-panel-2", "--ds-green", "--ds-lime",
-    "--ds-cyan", "--ds-purple", "--ds-text", "--ds-muted", "--ds-line",
+    "--ds-cyan", "--ds-purple", "--ds-text", "--ds-conversation-text", "--ds-muted", "--ds-line",
     "--dream-skin-name", "--dream-skin-tagline", "--dream-skin-project-prefix",
     "--dream-skin-project-label", "--dream-skin-user-avatar", "--dream-skin-assistant-avatar",
     "--ds-task-panel-opacity-strong",
@@ -146,6 +146,7 @@
         "--ds-cyan": secondary,
         "--ds-purple": highlight,
         "--ds-text": colors.text || "#1f1a1b",
+        "--ds-conversation-text": colors.conversationText || colors.text || "#1f1a1b",
         "--ds-muted": colors.muted || "#6b5f62",
         "--ds-line": colors.line || "rgba(196, 120, 128, .22)",
       };
@@ -159,6 +160,7 @@
         "--ds-cyan": secondary,
         "--ds-purple": highlight,
         "--ds-text": colors.text || "#e9fff1",
+        "--ds-conversation-text": colors.conversationText || colors.text || "#e9fff1",
         "--ds-muted": colors.muted || "#9ebdb3",
         "--ds-line": colors.line || "rgba(124, 255, 70, .28)",
       };

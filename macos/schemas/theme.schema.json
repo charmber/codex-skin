@@ -92,6 +92,7 @@
         "secondary": { "$ref": "#/$defs/color" },
         "highlight": { "$ref": "#/$defs/color" },
         "text": { "$ref": "#/$defs/color" },
+        "conversationText": { "$ref": "#/$defs/color" },
         "muted": { "$ref": "#/$defs/color" },
         "line": { "$ref": "#/$defs/color" }
       }

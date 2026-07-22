@@ -9,6 +9,7 @@
   --ds-cyan: #8da397;
   --ds-purple: #9d94a3;
   --ds-text: #edf0f1;
+  --ds-conversation-text: var(--ds-text);
   --ds-muted: #a3aaae;
   --ds-line: rgba(130, 152, 163, .24);
   --ds-bg-rgb: 17 19 24;
@@ -263,6 +264,13 @@ html.codex-qq-skin[data-qq-toolbar="off"] .dream-retro-toolbar {
     0 1px 2px rgb(13 53 112 / .35);
 }
 
+/* Windows needs the retro shell to provide its own draggable caption area;
+   keep the visual titlebar draggable while leaving interactive controls out. */
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-titlebar {
+  pointer-events: auto;
+  -webkit-app-region: drag;
+}
+
 .dream-retro-title-penguin {
   position: absolute;
   left: 88px;
@@ -315,6 +323,13 @@ html.codex-qq-skin[data-qq-toolbar="off"] .dream-retro-toolbar {
   text-shadow: 0 1px white;
   white-space: nowrap;
   pointer-events: auto;
+}
+
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-toolbar,
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-toolbar *,
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-native-controls,
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-native-controls * {
+  -webkit-app-region: no-drag;
 }
 
 .dream-retro-toolbar button {
@@ -392,6 +407,17 @@ html.codex-qq-skin[data-qq-toolbar="off"] .dream-retro-toolbar {
   border-color: rgb(190 224 255 / .38) !important;
   background: rgb(255 255 255 / .10) !important;
   color: inherit !important;
+}
+
+/* Windows keeps the real top-right Codex status controls inside the native
+   header. Re-cloning them into the retro titlebar duplicates the hit targets
+   and causes visible overlap with the live status cluster. */
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-native-controls {
+  display: none !important;
+}
+
+html.codex-qq-skin[data-dream-platform="windows"] .dream-retro-titlebar strong {
+  right: 24px;
 }
 
 .dream-retro-profile-host {
@@ -587,6 +613,36 @@ html.codex-qq-skin aside.app-shell-left-panel button[aria-label^="切换模式"]
 html.codex-qq-skin aside.app-shell-left-panel button[aria-label^="切换模式"]::after {
   content: " ·";
   color: var(--ds-secondary);
+}
+
+/* The Windows home-sidebar mode switch sits in a tighter native row than the
+   macOS shell. Keep the label compact and above nearby controls so the real
+   Codex/Work toggle stays clickable. */
+html.codex-qq-skin[data-dream-platform="windows"] aside.app-shell-left-panel
+  button:is([aria-label^="切换模式"], [aria-label^="切換模式"], [aria-label^="switch mode" i]) {
+  position: relative !important;
+  z-index: 4 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: max-content !important;
+  padding-right: 8px !important;
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+
+html.codex-qq-skin[data-dream-platform="windows"] aside.app-shell-left-panel
+  button:is([aria-label^="切换模式"], [aria-label^="切換模式"], [aria-label^="switch mode" i])::after {
+  content: "" !important;
+}
+
+html.codex-qq-skin[data-dream-platform="windows"] aside.app-shell-left-panel
+  *:has(> button:is([aria-label^="切换模式"], [aria-label^="切換模式"], [aria-label^="switch mode" i])) {
+  position: relative !important;
+  z-index: 4 !important;
+  overflow: visible !important;
 }
 
 html.codex-qq-skin aside.app-shell-left-panel [class~="bg-token-list-hover-background"],
@@ -1011,6 +1067,39 @@ html.codex-qq-skin:is(
   height: calc(100% + 46px) !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+/* On Windows the native application menu remains interactive in this 46px
+   band. Keep the sidebar header below it so mode switching and Back/Forward
+   do not occupy the same hit area. */
+html.codex-qq-skin[data-dream-platform="windows"][data-dream-task-route="true"]
+  aside.app-shell-left-panel > .max-w-full.overflow-hidden {
+  top: 0 !important;
+  height: 100% !important;
+}
+
+/* Settings uses the same native menu band on Windows. Keep both columns below
+   that menu and let Codex's own category scroller manage the reduced height. */
+html.codex-qq-skin[data-dream-platform="windows"]:is(
+  :has(input[placeholder*="设置"]),
+  :has(input[placeholder*="設定"]),
+  :has(input[placeholder*="settings" i])
+)
+  aside.app-shell-left-panel > .max-w-full.overflow-hidden,
+html.codex-qq-skin[data-dream-platform="windows"]:is(
+  :has(input[placeholder*="设置"]),
+  :has(input[placeholder*="設定"]),
+  :has(input[placeholder*="settings" i])
+)
+  main.main-surface > .max-w-full.overflow-hidden,
+html.codex-qq-skin[data-dream-platform="windows"]:is(
+  :has(input[placeholder*="设置"]),
+  :has(input[placeholder*="設定"]),
+  :has(input[placeholder*="settings" i])
+)
+  main.main-surface > div:first-of-type {
+  top: 0 !important;
+  height: 100% !important;
 }
 
 /* Settings: collapse the empty native header band above「返回应用」. */
@@ -2005,6 +2094,44 @@ html.codex-qq-skin .ProseMirror {
   caret-color: var(--ds-accent) !important;
 }
 
+html.codex-qq-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+) {
+  --color-token-foreground: var(--ds-conversation-text) !important;
+  --color-token-text-primary: var(--ds-conversation-text) !important;
+  --color-text-foreground: var(--ds-conversation-text) !important;
+  --color-token-conversation-body: var(--ds-conversation-text) !important;
+  --color-token-conversation-header: var(--ds-conversation-text) !important;
+  color: var(--ds-conversation-text) !important;
+}
+
+html.codex-qq-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+)
+  :is(p, li, blockquote, h1, h2, h3, h4, h5, h6, a, strong, em, del, td, th):not(pre *) {
+  color: var(--ds-conversation-text) !important;
+}
+
+html.codex-qq-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+) pre {
+  --color-token-foreground: var(--ds-text) !important;
+  --color-token-text-primary: var(--ds-text) !important;
+  --color-text-foreground: var(--ds-text) !important;
+}
+
 html.codex-qq-skin button[class~="bg-token-foreground"] {
   background: var(--ds-accent) !important;
   color: var(--ds-on-accent) !important;
@@ -2247,18 +2374,8 @@ html.codex-qq-skin[data-dream-shell="light"]
   transform: translateX(1px) !important;
 }
 
-/* Settings uses a div.app-shell-left-panel rather than the task-page aside.
-   Remove the reserved native header sibling instead of visually dragging nav
-   upward: a negative offset puts 返回应用 underneath an invisible hit layer. */
-html.codex-qq-skin:is(
-  :has(input[placeholder*="设置"]),
-  :has(input[placeholder*="設定"]),
-  :has(input[placeholder*="settings" i])
-)
-  .app-shell-left-panel > :first-child:not(nav) {
-  display: none !important;
-}
-
+/* Older settings builds expose nav directly; current builds wrap the category
+   list in a div, which must remain visible. */
 html.codex-qq-skin:is(
   :has(input[placeholder*="设置"]),
   :has(input[placeholder*="設定"]),

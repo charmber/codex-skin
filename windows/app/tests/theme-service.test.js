@@ -26,19 +26,25 @@ test("Windows theme state supports save, palette switch, export, and import", as
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const first = new ThemeService({ engineRoot, stateRoot: path.join(root, "first") });
   await first.initialize();
+  const legacyRaw = JSON.parse(await fs.readFile(path.join(engineRoot, "themes", "builtin-miku-aqua", "theme.json"), "utf8"));
+  const legacyTheme = await first.validateTheme(legacyRaw, true);
+  assert.equal(legacyTheme.colors.conversationText, legacyTheme.colors.text);
   const initial = await first.activeThemeView();
   assert.equal(initial.layoutId, "stage");
   assert.ok(initial.imageAsset.path.endsWith("background.png"));
+  assert.equal(initial.colors.conversationText, initial.colors.text);
 
   const saved = await first.saveDraft({
     ...initial,
     name: "Windows 测试主题",
     paletteName: "测试配色",
+    colors: { ...initial.colors, conversationText: "#123456" },
     imagePath: initial.imageAsset.path,
     userAvatarPath: initial.imageAsset.path,
     assistantAvatarPath: initial.imageAsset.path,
   });
   assert.equal(saved.name, "Windows 测试主题");
+  assert.equal(saved.colors.conversationText, "#123456");
   assert.match(saved.id, /^custom-/);
   assert.equal(saved.avatars.user, "avatar-user.png");
   assert.equal(saved.avatars.assistant, "avatar-assistant.png");
@@ -59,6 +65,7 @@ test("Windows theme state supports save, palette switch, export, and import", as
   await second.initialize();
   const imported = await second.importPackage(archive);
   assert.equal(imported.paletteId, "miku-sakura");
+  assert.equal(imported.colors.conversationText, imported.colors.text);
   assert.equal((await second.loadTheme()).name, switched.name);
 
   const unsafeArchive = path.join(root, "unsafe.cds-theme.zip");

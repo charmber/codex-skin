@@ -8,6 +8,7 @@
   --ds-cyan: #36d7e8;
   --ds-purple: #642a8c;
   --ds-text: #e9fff1;
+  --ds-conversation-text: var(--ds-text);
   --ds-muted: #9ebdb3;
   --ds-line: rgba(124, 255, 70, .28);
 }
@@ -1878,4 +1879,44 @@ html.codex-dream-skin[data-dream-theme="classic-blue-07"] .dream-classic-status-
   html.codex-dream-skin[data-dream-theme="classic-blue-07"] .dream-classic-bot {
     transform: scale(.78);
   }
+}
+
+/* Keep this after palette-specific rules so the user-selected conversation
+   color wins without changing composer text or syntax-highlighted code. */
+html.codex-dream-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+) {
+  --color-token-foreground: var(--ds-conversation-text) !important;
+  --color-token-text-primary: var(--ds-conversation-text) !important;
+  --color-text-foreground: var(--ds-conversation-text) !important;
+  --color-token-conversation-body: var(--ds-conversation-text) !important;
+  --color-token-conversation-header: var(--ds-conversation-text) !important;
+  color: var(--ds-conversation-text) !important;
+}
+
+html.codex-dream-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+)
+  :is(p, li, blockquote, h1, h2, h3, h4, h5, h6, a, strong, em, del, td, th):not(pre *) {
+  color: var(--ds-conversation-text) !important;
+}
+
+html.codex-dream-skin .thread-scroll-container :is(
+  .dream-skin-chat-message,
+  [data-content-search-unit-key$=":user"],
+  [data-content-search-unit-key$=":assistant"],
+  [data-message-author-role="user"],
+  [data-message-author-role="assistant"]
+) pre {
+  --color-token-foreground: var(--ds-text) !important;
+  --color-token-text-primary: var(--ds-text) !important;
+  --color-text-foreground: var(--ds-text) !important;
 }

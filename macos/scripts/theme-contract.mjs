@@ -9,7 +9,7 @@ export const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
 const COLOR_KEYS = [
   "background", "panel", "panelAlt", "accent", "accentAlt", "secondary",
-  "highlight", "text", "muted", "line",
+  "highlight", "text", "conversationText", "muted", "line",
 ];
 
 const DEFAULT_COLORS = {
@@ -21,6 +21,7 @@ const DEFAULT_COLORS = {
   secondary: "#36d7e8",
   highlight: "#642a8c",
   text: "#e9fff1",
+  conversationText: "#e9fff1",
   muted: "#9ebdb3",
   line: "rgba(124, 255, 70, .28)",
 };
@@ -196,6 +197,10 @@ export function normalizeTheme(raw, { source = "theme.json", renderer, strict = 
 
   const colors = {};
   for (const key of COLOR_KEYS) {
+    if (key === "conversationText" && raw.colors?.[key] === undefined) {
+      colors[key] = colors.text;
+      continue;
+    }
     colors[key] = color(raw.colors?.[key], DEFAULT_COLORS[key], `theme.colors.${key}`, strict);
   }
   const themeId = text(raw.id, strict ? "" : "custom", 80);
