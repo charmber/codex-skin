@@ -8,9 +8,12 @@ test("release metadata stays aligned", async () => {
   const windowsRoot = path.resolve(appRoot, "..");
   const packageJson = JSON.parse(await fs.readFile(path.join(appRoot, "package.json"), "utf8"));
   const windowsVersion = (await fs.readFile(path.join(windowsRoot, "VERSION"), "utf8")).trim();
-  const macVersion = (await fs.readFile(path.resolve(windowsRoot, "../macos/VERSION"), "utf8")).trim();
+  const macRoot = path.resolve(windowsRoot, "../macos");
+  const macVersion = (await fs.readFile(path.join(macRoot, "VERSION"), "utf8")).trim();
+  const macPackageJson = JSON.parse(await fs.readFile(path.join(macRoot, "package.json"), "utf8"));
   assert.equal(packageJson.version, windowsVersion);
   assert.equal(windowsVersion, macVersion);
+  assert.equal(macPackageJson.version, macVersion);
   assert.match(packageJson.build.artifactName, /Windows/);
 });
 
